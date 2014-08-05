@@ -16,16 +16,10 @@ public class Street {
 	}
 	
 	public void blockSpace(int i, Street kstack) {
-		this.blockingKStack = kstack;
-		if (i>1) {
-			this.prev1.blockSpace(i-1, kstack);
-		}
+		
 	}
 	
 	public void unblockSpace(int i) {
-		this.blockingKStack = null;
-		if (i>1) {
-			this.prev1.unblockSpace(i-1);
-		}
+		
 	}
 }
