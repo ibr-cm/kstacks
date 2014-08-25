@@ -14,7 +14,6 @@ public class Simulator {
 	private int kHeight;
 	private int carSize;
 	private int parkingRows;
-	private int carsInParkingLot;
 	
 	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, Car[] carList, EventItem[] eventList, int totalCarsUsed, int kHeight, int carSize, int parkingRows) {
 		this.tick = 0;
@@ -35,25 +34,33 @@ public class Simulator {
 	}
 	
 	public void runSimulator() {
-		while(!eventsFinished() && tick<25) {
+		while(!eventsFinished() && tick<65) {
 			
 			
-			
-			
-			
+			System.out.println("=============================================================");
+			System.out.println("Tick: "+tick);
+			System.out.println("=============================================================");
+			System.out.println();
 			moveCars();
+			System.out.println("Moved Cars");
+			System.out.println();
 			
-			
-			//despawnCar();
-			
+			despawnCar();
 			
 			checkForSpawns();
 			
 			spawnCar();
 			
 			printMidLane();
+			printStack(0);
+			printStack(1);
+			printStack(2);
+			printStack(3);
+			printStack(4);
+			printStack(5);
 			
 			tick++;
+			System.out.println("=============================================================");
 		}
 	}
 	
@@ -79,9 +86,6 @@ public class Simulator {
 				tempStreet = tempStreet.prev1;
 			}
 			tempCar.done = true;
-			
-			// now one car less in the parking lot
-			this.carsInParkingLot--;
 		}
 	}
 	
@@ -94,6 +98,23 @@ public class Simulator {
 			if (eventList[i].entryTime == tick) {
 				
 				System.out.println("checkForSpawns: Put a car on spawn list at "+this.tick+" tick(s).");
+				
+				// if all kstacks are full the spawn gets cancelled, the event is considered fulfilled
+				// cars which did not fit into the parkingLot can be recognized because their exit time stamp
+				// is earlier than the entry time stamp.
+				int carsInStacks = 0;
+				for (int j=0; j<kstack.length; j++) {
+					carsInStacks += kstack[j].watermark;
+				}
+				if (carsInStacks == kstack.length*kHeight) {
+					eventList[i].fulfilled = true;
+					eventList[i].exitTime = tick-1;
+					System.out.println("checkForSpawn: a car tried to spawn but parkingLot is full");
+					System.out.println("checkForSpawn: event: "+eventList[i]);
+					System.out.println("checkForSpawn: entryTime: "+eventList[i].entryTime+", backOrderTime: "+eventList[i].backOrderTime+", exitTime"+eventList[i].exitTime);
+					System.out.println();
+					return;
+				}
 				
 				// the spawning of this car will be appended to the list of spawns
 				int j = 0;
@@ -155,15 +176,17 @@ public class Simulator {
 				DrivingTarget[] targets = new DrivingTarget[1];
 				Street tempStreet1 = new Street();
 				tempStreet1 = spawnList[0].car.kstack;
-				if (carSize > 1 || spawnList[0].car.kstack.watermark < kHeight-1) {
-					System.out.println("spawnCar: carSize "+carSize);
-					System.out.println("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].car.kstack.watermark);
+				spawnList[0].car.kstack.locked = true;
+				System.out.println("spawnCar: carSize "+carSize);
+				System.out.println("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].car.kstack.watermark+" and locked is "+spawnList[0].car.kstack.locked);
+				if (carSize > 1 || spawnList[0].car.kstack.watermark < kHeight) {
 					for (int i=0; i<kHeight*carSize-1-carSize*(spawnList[0].car.kstack.watermark-1); i++) {
 						tempStreet1 = tempStreet1.next1;
 					}
 				}
 				System.out.println("spawnCar: Final parking position: "+tempStreet1);
 				targets[0] = new DrivingTarget(tempStreet1, 'D');
+				targets[0].unlockKStack = spawnList[0].car.kstack;
 				spawnList[0].car.setDrivingTargets(targets);
 				
 				// shift the whole list one item down
@@ -190,11 +213,107 @@ public class Simulator {
 		}
 	}
 	
+	private void scheduleUnparking() {
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	private int findSmallestStack() {
 		int index = -1, indexFallback = -1;
 		int watermark = kHeight, watermarkFallback = kHeight;
 		
-		for (int i=0; i<parkingRows; i++) {
+		for (int i=0; i<parkingRows*6; i++) {
 			// looking for unlocked kstack with lowest watermark
 			if (kstack[i].watermark < watermark && !kstack[i].locked) {
 				watermark = kstack[i].watermark;
@@ -218,10 +337,26 @@ public class Simulator {
 	}
 	
 	private void printMidLane() {
+		System.out.println("Middle Lane:");
 		Street tempStreet1 = this.spawn;
 		for (int i=0; i<parkingRows+2; i++) {
 			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car);
 			tempStreet1 = tempStreet1.next1;
+		}
+		System.out.println();
+	}
+	
+	private void unparkCar(Car car) {
+		
+	}
+	
+	private void printStack(int stack) {
+		System.out.println("Stack "+stack+" (watermark: "+kstack[stack].watermark+"):");
+		Street tempStreet1 = kstack[stack];
+		System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", locked: "+((KStack)tempStreet1).locked);
+		for (int i=0; i<kHeight-1; i++) {
+			tempStreet1 = tempStreet1.next1;
+			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car);
 		}
 		System.out.println();
 	}

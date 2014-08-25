@@ -60,7 +60,7 @@ public class Car {
 		this.currentStreet = spawn;
 		spawn.car = this;
 		this.inParkingLot = true;
-		this.kstack.locked = true;
+		this.kstack.locked = true; // locks kstack against parking and unparking
 		
 		System.out.println("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+") through lane "+lane+".");
 	}
@@ -70,13 +70,17 @@ public class Car {
 	}
 	
 	public void drive() {
+		System.out.println("drive: driving car "+this);
 		if (this.currentStreet == spawn && this.firstRide) {
 			if (lane.car == null && lane.blockingKStack == null) {
+				System.out.println("drive: ("+this+") checked lane - free");
 				lane.car = this;
 				this.currentStreet = lane;
 				if (size == 1)
 					this.currentStreet.prev1.car = null;
 				// TODO remove pieces of this car behind itself if size > 1
+			} else {
+				System.out.println("drive: ("+this+") checked lane - not free");
 			}
 		} else if (this.currentStreet == spawn && !this.firstRide) {
 			// TODO
@@ -103,7 +107,15 @@ public class Car {
 		}
 		if (this.drivingTarget != null && this.currentStreet == drivingTarget[0].street) {
 			System.out.println("drive: reduced drivingTargets");
-			System.out.println();
+			
+			// unlocking a kstack again so that the next procedure can be done
+			if (drivingTarget[0].unlockKStack != null) {
+				System.out.println(drivingTarget[0].unlockKStack+" "+drivingTarget[0].unlockKStack.locked);
+				System.out.println("drive: "+drivingTarget[0].unlockKStack+" unlocked again");
+				drivingTarget[0].unlockKStack.locked = false;
+				drivingTarget[0].unlockKStack = null;
+			}
+			
 			if (drivingTarget.length == 1) {
 				this.drivingTarget = null;
 			} else {
@@ -114,6 +126,7 @@ public class Car {
 				drivingTarget = tempDrivingTarget;
 			}
 			this.firstRide = false;
+			System.out.println();
 		}
 	}
 }
