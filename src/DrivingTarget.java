@@ -8,8 +8,9 @@ public class DrivingTarget {
 		this.direction = 'N';
 		this.unlockKStack = null;
 	}
-	public DrivingTarget(Street street, char direction) {
+	public DrivingTarget(Street street, char direction, KStack kstack) {
 		this.street = street;
 		this.direction = direction;
+		this.unlockKStack = kstack;
 	}
 }

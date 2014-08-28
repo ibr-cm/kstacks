@@ -76,9 +76,8 @@ public class Car {
 				System.out.println("drive: ("+this+") checked lane - free");
 				lane.car = this;
 				this.currentStreet = lane;
-				if (size == 1)
-					this.currentStreet.prev1.car = null;
-				// TODO remove pieces of this car behind itself if size > 1
+				Street tempStreet1 = lane;
+				clearTileBehindCar();
 			} else {
 				System.out.println("drive: ("+this+") checked lane - not free");
 			}
@@ -87,21 +86,34 @@ public class Car {
 		} else {
 			if (drivingTarget != null && drivingTarget[0] != null) {
 				if (drivingTarget[0].direction == 'D') { // drive forward
-					if (this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null) {
+					if (this.currentStreet.kstack1 != null && this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null) {
 						this.currentStreet.kstack1.car = this;
 						this.currentStreet = this.currentStreet.kstack1;
-						this.currentStreet.prev1.car = null;
-					} else if (this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null) {
+						clearTileBehindCar();
+					} else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null) {
 						this.currentStreet.kstack2.car = this;
 						this.currentStreet = this.currentStreet.kstack2;
-						this.currentStreet.prev1.car = null;
+						clearTileBehindCar();
 					} else if (this.currentStreet.next1.car == null) {
 						this.currentStreet.next1.car = this;
 						this.currentStreet = this.currentStreet.next1;
-						this.currentStreet.prev1.car = null;
+						clearTileBehindCar();
 					}
 				} else if (drivingTarget[0].direction == 'R') { // drive backwards
-					; //TODO
+					// Check if the space behind the car is free!
+					Street tempStreet1 = this.currentStreet;
+					for (int i=0; i < size; i++) {
+						tempStreet1 = tempStreet1.prev1;
+					}
+					
+					// If the piece of street behind the car is free the car can back up 1 tile.
+					// This is independant from the size of the vehicle.
+					if (tempStreet1.car == null && tempStreet1.blockingKStack == null) {
+						tempStreet1.car = this;
+						this.currentStreet.car = null;
+						this.currentStreet = this.currentStreet.prev1;
+							
+					}
 				}
 			}
 		}
@@ -128,5 +140,13 @@ public class Car {
 			this.firstRide = false;
 			System.out.println();
 		}
+	}
+	
+	private void clearTileBehindCar() {
+		Street tempStreet1 = this.currentStreet;
+		for (int i = 0; i < this.size; i++) {
+			tempStreet1 = tempStreet1.prev1;
+		}
+		tempStreet1.car = null;
 	}
 }

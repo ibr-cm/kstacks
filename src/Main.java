@@ -190,7 +190,7 @@ public class Main {
 		}
 		
 		
-		eventList[0].setupEvent(carList[0], 5, 95);
+		eventList[0].setupEvent(carList[0], 5, 60);
 		eventList[1].setupEvent(carList[1], 10, 95);
 		eventList[2].setupEvent(carList[2], 15, 95);
 		eventList[3].setupEvent(carList[3], 20, 95);
@@ -260,7 +260,7 @@ public class Main {
 
 		System.out.println();
 		
-		// print top lane
+		// print middle lane
 		tempStreet2 = spawn;
 		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
 		tempStreet2 = ((Spawn)(tempStreet2)).next1;
@@ -278,7 +278,7 @@ public class Main {
 
 		System.out.println();
 		
-		// print middle lane
+		// print top lane
 		tempStreet2 = spawn;
 		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
 		tempStreet2 = ((Spawn)(tempStreet2)).next2;

@@ -2,7 +2,7 @@
 public class Street {
 	public Street prev1, next1;
 	public KStack kstack1, kstack2;
-	public Street blockingKStack;
+	public KStack blockingKStack;
 	public Car car;
 	public int watermark;
 	
