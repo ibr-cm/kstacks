@@ -108,7 +108,7 @@ public class Car {
 					
 					// If the piece of street behind the car is free the car can back up 1 tile.
 					// This is independant from the size of the vehicle.
-					if (tempStreet1.car == null && tempStreet1.blockingKStack == null) {
+					if (tempStreet1.car == null && (unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
 						tempStreet1.car = this;
 						this.currentStreet.car = null;
 						this.currentStreet = this.currentStreet.prev1;

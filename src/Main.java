@@ -2,9 +2,9 @@ public class Main {
 	public static void main(String args[]) {
 		
 		int parkingRows = 1;
-		int carSize = 1;
-		int kHeight = 1;
-		int totalCarsUsed = 7;
+		int carSize = 3;
+		int kHeight = 2;
+		int totalCarsUsed = 1;
 		
 		
 		
@@ -30,7 +30,7 @@ public class Main {
 		// pieces of street before spawn to drive back from kstacks close to spawn if necessary;	
 		if (carSize*kHeight>1) {
 			tempStreet2 = spawn;
-			for (int i=0; i<carSize*(kHeight-1)-1; i++) {
+			for (int i=0; i<carSize*kHeight; i++) {
 				tempStreet1 = new Street();
 				tempStreet1.next1 = tempStreet2;
 				tempStreet2.prev1 = tempStreet1;
@@ -190,13 +190,15 @@ public class Main {
 		}
 		
 		
-		eventList[0].setupEvent(carList[0], 5, 60);
-		eventList[1].setupEvent(carList[1], 10, 95);
+		eventList[0].setupEvent(carList[0], 1, 8);
+		/*eventList[1].setupEvent(carList[1], 10, 95);
 		eventList[2].setupEvent(carList[2], 15, 95);
 		eventList[3].setupEvent(carList[3], 20, 95);
 		eventList[4].setupEvent(carList[4], 25, 95);
-		eventList[5].setupEvent(carList[5], 30, 95);
-		eventList[6].setupEvent(carList[6], 35, 95);
+		eventList[5].setupEvent(carList[5], 30, 95);*/
+		//eventList[6].setupEvent(carList[6], 35, 95);
+		
+		
 		
 		
 		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);

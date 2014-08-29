@@ -37,13 +37,24 @@ public class Simulator {
 	}
 	
 	public void runSimulator() {
-		while(!eventsFinished() && tick<65) {
+		while(!eventsFinished() && tick<25) {
+			
+//			if (tick == 8) {
+//				System.out.println("Car Test");
+//				Car testCar = new Car();
+//				spawn.next1.car = testCar;
+//			}
 			
 			
 			System.out.println("=============================================================");
 			System.out.println("Tick: "+tick);
 			System.out.println("=============================================================");
 			System.out.println();
+			
+			checkForStreetBlocking();
+			
+			checkForStreetUnblocking();
+			
 			moveCars();
 			System.out.println("Moved Cars");
 			System.out.println();
@@ -55,8 +66,6 @@ public class Simulator {
 			spawnCar();
 			
 			checkForUnparkingEvents();
-			
-			checkForStreetBlocking();
 			
 			printMidLane();
 			printStack(0);
@@ -82,8 +91,8 @@ public class Simulator {
 	}
 	
 	private void despawnCar() {
-		System.out.println("Just despawned car "+despawn.car);
 		if (despawn.car != null) {
+			System.out.println("Just despawned car "+despawn.car);
 			Car tempCar = despawn.car;
 			EventItem tempEvent = tempCar.eventItem;
 			
@@ -135,7 +144,7 @@ public class Simulator {
 				spawnList[j] = eventList[i];
 				
 				// index of the stack with the smallest amount of cars
-				int index = findSmallestStack();
+				int index = findSmallestStack(true);
 				
 				System.out.println("checkForSpawns: Car was put on stack "+index+" ("+this.kstack[index]+").");
 				//System.out.println("Lane "+());
@@ -229,6 +238,7 @@ public class Simulator {
 			if (eventList[i].backOrderTime == tick) {
 				System.out.println("scheduleUnparking: Creating an unparking Event at "+this.tick+" tick(s).");
 				UnparkEvent newUnparkEvent = new UnparkEvent();
+				newUnparkEvent.setCarSize(carSize);
 				newUnparkEvent.setCarToUnpark(eventList[i].car); // Car that wants to leave its spot.
 				newUnparkEvent.setKStack();
 				
@@ -237,7 +247,10 @@ public class Simulator {
 				DrivingTarget[] tempTarget1 = new DrivingTarget[2];
 				tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null);
 				tempTarget1[1] = new DrivingTarget(despawn, 'D', null);
+				//System.out.println(tempTarget1[0].street+" "+tempTarget1[0].direction);
+				//System.out.println(tempTarget1[1].street+" "+tempTarget1[1].direction);
 				eventList[i].car.drivingTarget = tempTarget1;
+				eventList[i].car.unparking = true;
 				newUnparkEvent.carToUnpark.kstack = null;
 				
 				
@@ -246,7 +259,7 @@ public class Simulator {
 				// Otherwise cars will be moved up to the street first and block the street only if they are entering it right away.
 				Street tempStreet1 = eventList[i].car.currentStreet;
 				Car tempCar1 = eventList[i].car;
-				System.out.println("schedulteUnparkting: "+tempCar1+" is going to unpark.");
+				System.out.println("scheduleUnparkting: "+tempCar1+" is going to unpark.");
 				int counter = 0;
 				while (tempCar1 != null) {
 					while (tempStreet1.car == tempCar1) {
@@ -290,15 +303,19 @@ public class Simulator {
 			// when it would block space an unparking event of higher priority needs.
 			
 			// Cars are now at the street.
-			if (tempUnparkEvent1.kstack.next1 != null) {
-				Street tempStreet1 = (Street) tempUnparkEvent1.kstack.prev1;
+			if (tempUnparkEvent1.kstack.car != null) {
+				Street tempStreet1 = tempUnparkEvent1.kstack.prev1;
+				
+				// Checking if the street is blocked.
 				boolean spaceIsFree = true;
 				for (int i = 0; i < (tempUnparkEvent1.carsInTheWay+1)*this.carSize-1; i++) {
 					if (tempStreet1.car != null) {
 						spaceIsFree = false;
 					}
 				}
-				if (spaceIsFree && tempUnparkEvent1.carsInTheWay == 0) {
+				
+				// If not the street can be blocked.
+				if (spaceIsFree) { // && tempUnparkEvent1.carsInTheWay == 0) {
 					blockStreets(tempUnparkEvent1.kstack, this.carSize);
 					
 				}
@@ -307,7 +324,7 @@ public class Simulator {
 	}
 		
 	
-	
+	// Blocking a certain amount of tiles
 	public void blockStreets(KStack kstack, int length) {
 		Street tempStreet1 = kstack.prev1;
 		for (int i = 0; i < length; i++) {
@@ -316,121 +333,137 @@ public class Simulator {
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	private int findSmallestStack() {
-		int index = -1, indexFallback = -1;
-		int watermark = kHeight, watermarkFallback = kHeight;
-		
-		for (int i=0; i<parkingRows*6; i++) {
-			// looking for unlocked kstack with lowest watermark
-			if (kstack[i].watermark < watermark && !kstack[i].locked) {
-				watermark = kstack[i].watermark;
-				index = i;
-			}
-			// in case there is no unlocked kstack with an parking spot
-			// this method gives back a locked stack with lowest watermark
-			if (kstack[i].watermark < watermarkFallback) {
-				watermarkFallback = kstack[i].watermark;
-				indexFallback = i;
-			}
+	private void checkForStreetUnblocking() {
+		UnparkEvent tempUnparkEvent1 = unparkingList;
+		while (tempUnparkEvent1.next != null) {
+			tempUnparkEvent1 = tempUnparkEvent1.next;
+			if(tempUnparkEvent1.isReadyToUnblock())
+				System.out.println("CheckForStreetUnblocking: unblock situation detected");
+				tempUnparkEvent1.unblockTiles();
 		}
-		if (index == -1) {
-			return indexFallback;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private int findSmallestStack(boolean testing) {
+		if (!testing) {
+			int index = -1, indexFallback = -1;
+			int watermark = kHeight, watermarkFallback = kHeight;
+			
+			for (int i=0; i<parkingRows*6; i++) {
+				// looking for unlocked kstack with lowest watermark
+				if (kstack[i].watermark < watermark && !kstack[i].locked) {
+					watermark = kstack[i].watermark;
+					index = i;
+				}
+				// in case there is no unlocked kstack with an parking spot
+				// this method gives back a locked stack with lowest watermark
+				if (kstack[i].watermark < watermarkFallback) {
+					watermarkFallback = kstack[i].watermark;
+					indexFallback = i;
+				}
+			}
+			if (index == -1) {
+				return indexFallback;
+			}
+			return index;
 		}
-		return index;
+		return 0;
 	}
 	
 	
 	private void printMidLane() {
 		System.out.println("Middle Lane:");
 		Street tempStreet1 = this.spawn;
-		for (int i=0; i<parkingRows+2; i++) {
-			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car);
-			tempStreet1 = tempStreet1.next1;
+		while (tempStreet1.prev1 != null) {
+			tempStreet1 = tempStreet1.prev1;
 		}
+		do {
+			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", blocking kstack: "+tempStreet1.blockingKStack);
+			tempStreet1 = tempStreet1.next1;
+		} while(tempStreet1 != null);
 		System.out.println();
 	}
 	
@@ -438,7 +471,7 @@ public class Simulator {
 		System.out.println("Exit of the parking Lot:");
 		Street tempStreet1 = this.crossroad;
 		do {
-			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car);
+			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", blocking kstack: "+tempStreet1.blockingKStack);
 			tempStreet1 = tempStreet1.next1;
 		} while (tempStreet1 != this.despawn);
 		System.out.println("Street: "+this.despawn+", Car: "+this.despawn.car);
@@ -448,10 +481,10 @@ public class Simulator {
 	private void printStack(int stack) {
 		System.out.println("Stack "+stack+" (watermark: "+kstack[stack].watermark+"):");
 		Street tempStreet1 = kstack[stack];
-		System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", locked: "+((KStack)tempStreet1).locked);
-		for (int i=0; i<kHeight-1; i++) {
+		System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", locked: "+((KStack)tempStreet1).locked+", blocking kstack: "+tempStreet1.blockingKStack);
+		for (int i=0; i<(kHeight*carSize)-1; i++) {
 			tempStreet1 = tempStreet1.next1;
-			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car);
+			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", blocking kstack: "+tempStreet1.blockingKStack);
 		}
 		System.out.println();
 	}
