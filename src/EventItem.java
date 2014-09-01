@@ -3,6 +3,7 @@ public class EventItem {
 	public Car car;
 	public int entryTime; // in ticks -- time when car enters the parking lot
 	public int backOrderTime; // in ticks -- time when car is ordered off the parking lot
+	public int backOrderDelay; // in ticks --  if a stack is locked this will be increased
 	public int exitTime; // in ticks -- time when car actually exits parking lot
 	public boolean fulfilled;
 	
@@ -11,6 +12,7 @@ public class EventItem {
 		this.car = null;
 		this.entryTime = 0;
 		this.backOrderTime = 0;
+		this.backOrderDelay = 0;
 		this.fulfilled = true;
 	}
 	
@@ -18,6 +20,7 @@ public class EventItem {
 		this.car = car;
 		this.entryTime = entryTime;
 		this.backOrderTime = backOrderTime;
+		this.backOrderDelay = 0;
 		this.exitTime = 0;
 		this.fulfilled = false;
 	}

@@ -3,8 +3,8 @@ public class Main {
 		
 		int parkingRows = 1;
 		int carSize = 3;
-		int kHeight = 2;
-		int totalCarsUsed = 1;
+		int kHeight = 4;
+		int totalCarsUsed = 4;
 		
 		
 		
@@ -190,13 +190,13 @@ public class Main {
 		}
 		
 		
-		eventList[0].setupEvent(carList[0], 1, 8);
-		/*eventList[1].setupEvent(carList[1], 10, 95);
-		eventList[2].setupEvent(carList[2], 15, 95);
-		eventList[3].setupEvent(carList[3], 20, 95);
-		eventList[4].setupEvent(carList[4], 25, 95);
-		eventList[5].setupEvent(carList[5], 30, 95);*/
-		//eventList[6].setupEvent(carList[6], 35, 95);
+		eventList[0].setupEvent(carList[0], 1, 20);
+		eventList[1].setupEvent(carList[1], 4, 95);
+		eventList[2].setupEvent(carList[2], 7, 95);
+		eventList[3].setupEvent(carList[3], 11, 95);
+//		eventList[4].setupEvent(carList[4], 25, 95);
+//		eventList[5].setupEvent(carList[5], 30, 95);
+//		eventList[6].setupEvent(carList[6], 35, 95);
 		
 		
 		

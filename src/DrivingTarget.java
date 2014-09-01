@@ -3,14 +3,16 @@ public class DrivingTarget {
 	public Street street;
 	public char direction;
 	public KStack unlockKStack;
+	public boolean releaseStreetBlock;
 	public DrivingTarget() {
 		this.street = null;
 		this.direction = 'N';
 		this.unlockKStack = null;
 	}
-	public DrivingTarget(Street street, char direction, KStack kstack) {
+	public DrivingTarget(Street street, char direction, KStack kstack, boolean releaseStreetBlock) {
 		this.street = street;
 		this.direction = direction;
 		this.unlockKStack = kstack;
+		this.releaseStreetBlock = releaseStreetBlock;
 	}
 }

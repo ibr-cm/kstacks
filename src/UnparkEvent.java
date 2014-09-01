@@ -65,8 +65,9 @@ public class UnparkEvent {
 	
 	public boolean isReadyToUnblock() {
 		Street tempStreet1 = kstack;
-		System.out.println("isReadyToUnblock: "+tempStreet1);
-		for (int i = 0; i < (carsInTheWay+(firstInQueue==carToUnpark?1:2))*carSize; i++) {
+		System.out.println("isReadyToUnblock: checking "+tempStreet1);
+		System.out.println("isReadyToUnblock: going back "+(carsInTheWay+1)*carSize+" tiles");
+		for (int i = 0; i < (carsInTheWay+1)*carSize; i++) {
 			tempStreet1 = tempStreet1.prev1;
 		}
 		System.out.println("isReadyToUnblock: "+tempStreet1+" "+tempStreet1.car);
