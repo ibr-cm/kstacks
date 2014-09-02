@@ -33,13 +33,23 @@ public class Car {
 	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
 	public boolean done; // true if successfully left the parking lot
 	
+	public int[] color;
+	
 	
 	
 	
 	public Car() {
+		color = new int[3];
+		color[0] = 0;
+		color[1] = (int)(Math.random()*256);
+		color[2] = (int)(Math.random()*256);
 	}
 	
 	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad) {
+		color = new int[3];
+		color[0] = 0;
+		color[1] = (int)(Math.random()*256);
+		color[2] = (int)(Math.random()*256);
 		this.size = size;
 		this.kstack = null;
 		this.currentStreet = null;
@@ -90,14 +100,14 @@ public class Car {
  				}
 				
 				// kstack1 is the one the car is supposed to enter
-				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null) {
+				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null && !this.unparking) {
 					this.currentStreet.kstack1.car = this;
 					this.currentStreet = this.currentStreet.kstack1;
 					clearTileBehindCar();
 				}
 				
 				// kstack2 is the one the car is supposed to enter
-				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null) {
+				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null && !this.unparking) {
 					this.currentStreet.kstack2.car = this;
 					this.currentStreet = this.currentStreet.kstack2;
 					clearTileBehindCar();
@@ -163,6 +173,11 @@ public class Car {
 						tempStreet2.blockingKStack = null;
 						tempStreet2 = tempStreet2.prev1;
 					}
+				}
+				
+				// if the car is supposed to delete a UnparkEvent from the list of events
+				if (this.drivingTarget[0].unparkEvent != null) {
+					this.drivingTarget[0].unparkEvent.pop(this.drivingTarget[0].unparkList);
 				}
 				
 				

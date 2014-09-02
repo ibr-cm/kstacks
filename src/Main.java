@@ -1,10 +1,10 @@
 public class Main {
 	public static void main(String args[]) {
 		
-		int parkingRows = 1;
+		int parkingRows = 3;
 		int carSize = 3;
-		int kHeight = 4;
-		int totalCarsUsed = 4;
+		int kHeight = 3;
+		int totalCarsUsed = 3;
 		
 		
 		
@@ -193,7 +193,7 @@ public class Main {
 		eventList[0].setupEvent(carList[0], 1, 20);
 		eventList[1].setupEvent(carList[1], 4, 95);
 		eventList[2].setupEvent(carList[2], 7, 95);
-		eventList[3].setupEvent(carList[3], 11, 95);
+//		eventList[3].setupEvent(carList[3], 11, 95);
 //		eventList[4].setupEvent(carList[4], 25, 95);
 //		eventList[5].setupEvent(carList[5], 30, 95);
 //		eventList[6].setupEvent(carList[6], 35, 95);
