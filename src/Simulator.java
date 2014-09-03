@@ -358,7 +358,7 @@ public class Simulator {
 				// The car needs new coordinates where it is supposed to go.
 				// So the kStack the car is assigned to is deleted from the cars object and the new coordinates are put in.
 				DrivingTarget[] tempTarget1 = new DrivingTarget[2];
-				tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, null, true, unparkingList, newUnparkEvent);
+				tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, newUnparkEvent.kstack, true, unparkingList, newUnparkEvent);
 				tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null);
 				//System.out.println(tempTarget1[0].street+" "+tempTarget1[0].direction);
 				//System.out.println(tempTarget1[1].street+" "+tempTarget1[1].direction);
@@ -383,8 +383,10 @@ l3:				while (tempCar1 != null) {
 						// So now the car closest to the road is found. In case this is the car, which tries to unpark, the UnparkEvent
 						// will handle that.
 						newUnparkEvent.firstInQueue = tempCar1;
-						tempCar1.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.kstack;
-						System.out.println("car: "+tempCar1);
+						if (tempCar1 != eventList[i].car) {
+							tempCar1.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.kstack;
+							System.out.println("car: "+tempCar1);
+						}
 						break l3; // set tempCar1 to null to break the while-loop
 					} else {
 						// set the pointer to the next ..
@@ -402,6 +404,10 @@ l3:				while (tempCar1 != null) {
 						// car go, which unparks.
 					}
 					newUnparkEvent.carsInTheWay = counter;
+				}
+				if (tempCar1 == eventList[i].car) {
+					tempCar1.drivingTarget[0].unlockKStackForUnparking = newUnparkEvent.kstack;
+					System.out.println("car: "+tempCar1);
 				}
 				System.out.println("scheduleUnparking: "+counter+" cars are in the way.");
 				this.unparkingList.addEvent(newUnparkEvent);
