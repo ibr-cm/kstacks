@@ -57,34 +57,34 @@ public class Simulator {
 //		spawn.next1.next1.next1.next1.next1.next1.next1.car = testCar1;
 //		
 //		Car testCar2 = new Car();
-//		kstack[3].next1.next1.car = testCar2;
-//		kstack[3].next1.next1.next1.car = testCar2;
-//		kstack[3].next1.next1.next1.next1.car = testCar2;
-//		kstack[3].next1.next1.next1.next1.next1.car = testCar2;
+//		kstack[0].next1.next1.car = testCar2;
+//		kstack[0].next1.next1.next1.car = testCar2;
+//		kstack[0].next1.next1.next1.next1.car = testCar2;
+//		kstack[0].next1.next1.next1.next1.next1.car = testCar2;
 //		
 //		Car testCar3 = new Car();
-//		kstack[2].car = testCar3;
-//		kstack[2].next1.car = testCar3;
-//		kstack[2].next1.next1.car = testCar3;
-//		kstack[2].next1.next1.next1.car = testCar3;
+//		kstack[1].car = testCar3;
+//		kstack[1].next1.car = testCar3;
+//		kstack[1].next1.next1.car = testCar3;
+//		kstack[1].next1.next1.next1.car = testCar3;
 //		
 //		Car testCar4 = new Car();
-//		kstack[189].next1.car = testCar4;
-//		kstack[189].next1.next1.car = testCar4;
-//		kstack[189].next1.next1.next1.car = testCar4;
-//		kstack[189].next1.next1.next1.next1.car = testCar4;
+//		kstack[4].next1.car = testCar4;
+//		kstack[4].next1.next1.car = testCar4;
+//		kstack[4].next1.next1.next1.car = testCar4;
+//		kstack[4].next1.next1.next1.next1.car = testCar4;
 //		
 //		Car testCar5 = new Car();
-//		kstack[320].car = testCar5;
-//		kstack[320].next1.car = testCar5;
-//		kstack[320].next1.next1.car = testCar5;
-//		kstack[320].next1.next1.next1.car = testCar5;
+//		kstack[6].car = testCar5;
+//		kstack[6].next1.car = testCar5;
+//		kstack[6].next1.next1.car = testCar5;
+//		kstack[6].next1.next1.next1.car = testCar5;
 //		
 //		Car testCar6 = new Car();
-//		kstack[321].car = testCar6;
-//		kstack[321].next1.car = testCar6;
-//		kstack[321].next1.next1.car = testCar6;
-//		kstack[321].next1.next1.next1.car = testCar6;
+//		kstack[12].car = testCar6;
+//		kstack[12].next1.car = testCar6;
+//		kstack[12].next1.next1.car = testCar6;
+//		kstack[12].next1.next1.next1.car = testCar6;
 		
 		try {
 			generateImage(Integer.toString(tick)+"_pre");
@@ -148,6 +148,9 @@ public class Simulator {
 //			printDespawn();
 			
 			//checkForStreetUnblocking();
+			
+			System.out.println(kstack[0].lockedForParking);
+			System.out.println(kstack[0].lockedForUnparking);
 			
 			tick++;
 			System.out.println("=============================================================");
@@ -258,7 +261,7 @@ public class Simulator {
 			// spawn blocked by car (previous spawn)
 			// kstack of spawning car is not accessible (because it is unparking)
 			boolean spawnBlocked = false;
-			if (spawn.blockingKStack != null || spawn.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || spawnList[0].car.kstack.locked) {
+			if (spawn.blockingKStack != null || spawn.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || spawnList[0].car.kstack.lockedForParking) {
 				spawnBlocked = true;
 			}
 			
@@ -272,9 +275,9 @@ public class Simulator {
 				DrivingTarget[] targets = new DrivingTarget[1];
 				Street tempStreet1 = new Street();
 				tempStreet1 = spawnList[0].car.kstack;
-				spawnList[0].car.kstack.locked = true;
+				spawnList[0].car.kstack.lockedForUnparking = true;
 				System.out.println("spawnCar: carSize "+carSize);
-				System.out.println("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].car.parkingSpot+" and locked is "+spawnList[0].car.kstack.locked);
+				System.out.println("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].car.parkingSpot+" and lockedForUnparking is "+spawnList[0].car.kstack.lockedForUnparking);
 				// fin the right spot where to park exactly
 				tempStreet1 = getParkingSpot(spawnList[0].car, spawnList[0].car.kstack);
 				
@@ -289,7 +292,7 @@ public class Simulator {
 //				}
 				
 				System.out.println("spawnCar: Final parking position: "+tempStreet1);
-				targets[0] = new DrivingTarget(tempStreet1, 'D', spawnList[0].car.kstack, false, unparkingList, null);
+				targets[0] = new DrivingTarget(tempStreet1, 'D', spawnList[0].car.kstack, null, false, unparkingList, null);
 				spawnList[0].car.setDrivingTargets(targets);
 				
 				// shift the whole list one item down
@@ -337,7 +340,7 @@ public class Simulator {
 		// Create a new UnparkEvent for every car that wants to unpark.
 		for (int i=0; i<totalCarsUsed; i++) {
 			if (eventList[i].backOrderTime + eventList[i].backOrderDelay == tick) {
-				if (eventList[i].car.kstack.locked) {
+				if (eventList[i].car.kstack.lockedForUnparking) {
 					System.out.println("checkForUnparkingEvents: was delayed because the kstack was locked");
 					eventList[i].backOrderDelay++;
 					return;
@@ -348,13 +351,15 @@ public class Simulator {
 				newUnparkEvent.setCarToUnpark(eventList[i].car); // Car that wants to leave its spot.
 				newUnparkEvent.setKStack();
 				newUnparkEvent.kstack.watermark--;
+				newUnparkEvent.kstack.lockedForParking = true;
+				newUnparkEvent.kstack.lockedForUnparking = true;
 				
 				
 				// The car needs new coordinates where it is supposed to go.
 				// So the kStack the car is assigned to is deleted from the cars object and the new coordinates are put in.
 				DrivingTarget[] tempTarget1 = new DrivingTarget[2];
-				tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, true, unparkingList, newUnparkEvent);
-				tempTarget1[1] = new DrivingTarget(despawn, 'D', null, false, unparkingList, null);
+				tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, null, true, unparkingList, newUnparkEvent);
+				tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null);
 				//System.out.println(tempTarget1[0].street+" "+tempTarget1[0].direction);
 				//System.out.println(tempTarget1[1].street+" "+tempTarget1[1].direction);
 				eventList[i].car.drivingTarget = tempTarget1;
@@ -369,7 +374,7 @@ public class Simulator {
 				Car tempCar1 = eventList[i].car;
 				System.out.println("scheduleUnparking: "+tempCar1+" is going to unpark.");
 				int counter = 0;
-				while (tempCar1 != null) {
+l3:				while (tempCar1 != null) {
 					while (tempStreet1.car == tempCar1) {
 						// Move to the next parking space (depends on the car size). Cars with different length could be used.55x3
 						tempStreet1 = tempStreet1.prev1;
@@ -378,7 +383,9 @@ public class Simulator {
 						// So now the car closest to the road is found. In case this is the car, which tries to unpark, the UnparkEvent
 						// will handle that.
 						newUnparkEvent.firstInQueue = tempCar1;
-						tempCar1 = null; // set tempCar1 to null to break the while-loop
+						tempCar1.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.kstack;
+						System.out.println("car: "+tempCar1);
+						break l3; // set tempCar1 to null to break the while-loop
 					} else {
 						// set the pointer to the next ..
 						tempCar1 = tempStreet1.car;
@@ -387,9 +394,9 @@ public class Simulator {
 						DrivingTarget tempDrivingTarget[] = new DrivingTarget[3];
 						tempStreet1.car.parkingSpot--;
 						System.out.println("scheduleUnparking: new targets for car "+tempStreet1.car+": "+unparkingHelpSpot(counter, newUnparkEvent.kstack)+", "+newUnparkEvent.carToUnpark.currentStreet);
-						tempDrivingTarget[0] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'R', null, true, unparkingList, null);
-						tempDrivingTarget[1] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'N', null, false, unparkingList, null);
-						tempDrivingTarget[2] = new DrivingTarget(getParkingSpot(tempStreet1.car, tempStreet1.car.kstack), 'D', null, false, unparkingList, null);
+						tempDrivingTarget[0] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'R', null, newUnparkEvent.kstack, true, unparkingList, null);
+						tempDrivingTarget[1] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'N', null, null, false, unparkingList, null);
+						tempDrivingTarget[2] = new DrivingTarget(getParkingSpot(tempStreet1.car, tempStreet1.car.kstack), 'D', null, null, false, unparkingList, null);
 						tempStreet1.car.drivingTarget = tempDrivingTarget;
 						// TODO: according to the counter the final position can be calculated the car has to reach to let the
 						// car go, which unparks.
@@ -403,7 +410,7 @@ public class Simulator {
 	}
 	
 	private Street unparkingHelpSpot(int spot, Street kstack) {
-		System.out.println("unparkingHelpSpot: spot = "+spot+", carSize = "+carSize+", spot*carSize = "+(spot*carSize));
+//		System.out.println("unparkingHelpSpot: spot = "+spot+", carSize = "+carSize+", spot*carSize = "+(spot*carSize));
 		Street tempStreet1 = kstack;
 		for (int i = 0; i < ((spot*carSize)+1); i++) {
 			tempStreet1 = tempStreet1.prev1;
@@ -413,7 +420,7 @@ public class Simulator {
 	
 	
 	private void checkForStreetBlocking() {
-		System.out.println("checkForStreetBlocking ausgefuehrt");
+//		System.out.println("checkForStreetBlocking ausgefuehrt");
 		// TODO: Make the first car in the queue block the kstack and unblock it when back at the right parking spot.
 		UnparkEvent tempUnparkEvent1 = unparkingList;
 		while (tempUnparkEvent1.next != null) {
@@ -564,7 +571,7 @@ public class Simulator {
 			
 			for (int i=0; i<parkingRows*6; i++) {
 				// looking for unlocked kstack with lowest watermark
-				if (kstack[i].watermark < watermark && !kstack[i].locked) {
+				if (kstack[i].watermark < watermark && !kstack[i].lockedForParking) {
 					watermark = kstack[i].watermark;
 					index = i;
 				}
@@ -611,7 +618,7 @@ public class Simulator {
 	private void printStack(int stack) {
 		System.out.println("Stack "+stack+" (watermark: "+kstack[stack].watermark+"):");
 		Street tempStreet1 = kstack[stack];
-		System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", locked: "+((KStack)tempStreet1).locked+", blocking kstack: "+tempStreet1.blockingKStack);
+		System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", lockedForUnparking: "+((KStack)tempStreet1).lockedForUnparking+", lockedForParking: "+((KStack)tempStreet1).lockedForParking+", blocking kstack: "+tempStreet1.blockingKStack);
 		for (int i=0; i<(kHeight*carSize)-1; i++) {
 			tempStreet1 = tempStreet1.next1;
 			System.out.println("Street: "+tempStreet1+", Car: "+tempStreet1.car+", blocking kstack: "+tempStreet1.blockingKStack);
@@ -632,7 +639,7 @@ public class Simulator {
 	
 	private void generateImage(String tick) throws Exception{
 		int X = 2+this.parkingRows+this.carSize+this.carSize*this.kHeight, Y = (6*this.carSize*this.kHeight)+3;
-		System.out.println("generateImage: image size: X = "+X+", Y = "+Y);
+//		System.out.println("generateImage: image size: X = "+X+", Y = "+Y);
 		int x =0, y = 0, PIX_SIZE = 5;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
 		Graphics2D g=(Graphics2D)bi.getGraphics();
@@ -790,8 +797,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -807,8 +814,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -824,14 +831,16 @@ l2:			while (tempStreet1 != crossroad) {
 				}
 			}
 		}
-/*
+		
 		// paint cars in the top kstacks
 		for (int i = kstack.length/3; i < 2*(kstack.length/3); i++) {
-//			System.out.println("generateImage: checking kstack up to "+(kstack.length/3)+" now at "+i);
-			y = kHeight*carSize;
+//					System.out.println("generateImage: checking kstack up to "+(kstack.length/3)+" now at "+i);
+			y = carSize*kHeight-1;
 			x = this.carSize*this.kHeight+1;
-//			System.out.println("Searching for kstack["+i+"] "+kstack[i]+", y="+y+", x="+x);
-			tempStreet1 = kstack[kstack.length/3].prev1;
+//					System.out.println("Searching for kstack["+i+"] "+kstack[i]+", y="+y+", x="+x);
+			tempStreet1 = spawn.next2;
+			while (tempStreet1.kstack1 == null)
+				tempStreet1 = tempStreet1.next1;
 			
 l2:			while (tempStreet1 != crossroad) {
 				if (kstack[i] == tempStreet1.kstack1) {
@@ -840,8 +849,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -857,8 +866,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -874,14 +883,16 @@ l2:			while (tempStreet1 != crossroad) {
 				}
 			}
 		}
-				
+		
 		// paint cars in the bottom kstacks
 		for (int i = 2*(kstack.length/3); i < kstack.length; i++) {
-//			System.out.println("generateImage: checking kstack up to "+(kstack.length/3)+" now at "+i);
-			y = Y-(kHeight*carSize);
+//					System.out.println("generateImage: checking kstack up to "+(kstack.length/3)+" now at "+i);
+			y = Y-(carSize*kHeight)-1;
 			x = this.carSize*this.kHeight+1;
-//			System.out.println("Searching for kstack["+i+"] "+kstack[i]+", y="+y+", x="+x);
-			tempStreet1 = kstack[2*(kstack.length/3)].prev1;
+//					System.out.println("Searching for kstack["+i+"] "+kstack[i]+", y="+y+", x="+x);
+			tempStreet1 = spawn.next3;
+			while (tempStreet1.kstack1 == null)
+				tempStreet1 = tempStreet1.next1;
 			
 l2:			while (tempStreet1 != crossroad) {
 				if (kstack[i] == tempStreet1.kstack1) {
@@ -890,8 +901,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -907,8 +918,8 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
-							System.out.println("generateImage: painting car at x="+x+", y="+y);
+//							System.out.println("generateImage: found car "+tempStreet1.car+" at "+tempStreet1+" in kstack "+i);
+//							System.out.println("generateImage: painting car at x="+x+", y="+y);
 							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
 							g.setColor(tempColor1);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
@@ -923,8 +934,7 @@ l2:			while (tempStreet1 != crossroad) {
 					x++;
 				}
 			}
-		}	
-		*/
+		}
 		
 		
 		g.dispose();

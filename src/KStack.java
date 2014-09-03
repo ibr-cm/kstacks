@@ -1,7 +1,8 @@
 
 public class KStack extends Street{
 	public int watermark;
-	public boolean locked;
+	public boolean lockedForParking;
+	public boolean lockedForUnparking;
 	public UnparkEvent currentUnparkEvent;
 	public KStack() {
 		super();

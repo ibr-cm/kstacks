@@ -70,7 +70,7 @@ public class Car {
 		this.currentStreet = spawn;
 		spawn.car = this;
 		this.inParkingLot = true;
-		this.kstack.locked = true; // locks kstack against parking and unparking
+		this.kstack.lockedForUnparking = true; // locks kstack against unparking
 		
 		System.out.println("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+") through lane "+lane+".");
 	}
@@ -150,13 +150,20 @@ public class Car {
 				System.out.println("drive: drivingTarget of car "+this+" reached");
 				// if the driving target wants to unlock a stack e.g. after the last car is back in the stack
 				// after unparking a car
-				if (drivingTarget[0].unlockKStack != null) {
+				if (drivingTarget[0].unlockKStackForParking != null) {
 					//System.out.println(drivingTarget[0].unlockKStack+" "+drivingTarget[0].unlockKStack.locked);
 					//System.out.println("drive: "+drivingTarget[0].unlockKStack+" unlocked again");
-					drivingTarget[0].unlockKStack.locked = false;
-					drivingTarget[0].unlockKStack = null;
+					drivingTarget[0].unlockKStackForParking.lockedForParking = false;
+//					drivingTarget[0].unlockKStack = null;
 				}
 				
+				// if a kstack is supposed to be unlocked for parking - this is the place to be! :)
+				if (drivingTarget[0].unlockKStackForUnparking != null) {
+					//System.out.println(drivingTarget[0].unlockKStack+" "+drivingTarget[0].unlockKStack.locked);
+					//System.out.println("drive: "+drivingTarget[0].unlockKStack+" unlocked again");
+					drivingTarget[0].unlockKStackForUnparking.lockedForUnparking = false;
+//					drivingTarget[0].unlockKStack = null;
+				}
 				
 				
 				// if the car is supposed to unlock the whole street from a lock of a certain kstack
