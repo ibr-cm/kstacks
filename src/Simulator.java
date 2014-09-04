@@ -91,7 +91,7 @@ public class Simulator {
 		} catch (Exception e) {System.out.println(e);}
 
 		
-		while(!eventsFinished() && tick<60) {
+		while(!eventsFinished()) {// && tick<65) {
 			
 			try {
 				generateImage(Integer.toString(tick)+"_0");
@@ -112,6 +112,9 @@ public class Simulator {
 			
 			moveCars();
 			System.out.println("Moved Cars");
+			
+			refreshStreets();
+			
 			System.out.println();
 			
 //			try {
@@ -137,6 +140,7 @@ public class Simulator {
 //			} catch (Exception e) {System.out.println(e);}
 			
 			checkForUnparkingEvents();
+			
 			
 //			printMidLane();
 //			printStack(0);
@@ -166,6 +170,7 @@ public class Simulator {
 		return true;
 	}
 	
+	// 
 	private void despawnCar() {
 		if (despawn.car != null) {
 			System.out.println("Just despawned car "+despawn.car);
@@ -181,7 +186,6 @@ public class Simulator {
 			}
 			tempCar.done = true;
 			printEventItem(tempCar.eventItem);
-			// TODO: Delete the corresponding UnparkEvent;
 		}
 	}
 	
@@ -261,7 +265,7 @@ public class Simulator {
 			// spawn blocked by car (previous spawn)
 			// kstack of spawning car is not accessible (because it is unparking)
 			boolean spawnBlocked = false;
-			if (spawn.blockingKStack != null || spawn.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || spawnList[0].car.kstack.lockedForParking) {
+			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || spawnList[0].car.kstack.lockedForParking) {
 				spawnBlocked = true;
 			}
 			
@@ -476,6 +480,7 @@ l3:				while (tempCar1 != null) {
 		}
 	}
 	
+	// obsolete
 	private void checkForStreetUnblocking() {
 		UnparkEvent tempUnparkEvent1 = unparkingList;
 		while (tempUnparkEvent1.next != null) {
@@ -488,7 +493,13 @@ l3:				while (tempCar1 != null) {
 	
 	
 	
-	
+	private void refreshStreets() {
+		Street tempStreet1 = spawn;
+		while (tempStreet1.prev1 != null) {
+			tempStreet1 = tempStreet1.prev1;
+		}
+		// TODO
+	}
 	
 	
 	
@@ -646,7 +657,7 @@ l3:				while (tempCar1 != null) {
 	private void generateImage(String tick) throws Exception{
 		int X = 2+this.parkingRows+this.carSize+this.carSize*this.kHeight, Y = (6*this.carSize*this.kHeight)+3;
 //		System.out.println("generateImage: image size: X = "+X+", Y = "+Y);
-		int x =0, y = 0, PIX_SIZE = 5;
+		int x =0, y = 0, PIX_SIZE = 15;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
 		Graphics2D g=(Graphics2D)bi.getGraphics();
 		String filename =  "tick_"+tick+ "_img.jpg";

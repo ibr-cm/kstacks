@@ -100,21 +100,21 @@ public class Car {
  				}
 				
 				// kstack1 is the one the car is supposed to enter
-				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null && !this.unparking) {
+				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack1 == this.kstack && this.currentStreet.kstack1.car == null && this.currentStreet.kstack1.carAtLastTick == null && !this.unparking) {
 					this.currentStreet.kstack1.car = this;
 					this.currentStreet = this.currentStreet.kstack1;
 					clearTileBehindCar();
 				}
 				
 				// kstack2 is the one the car is supposed to enter
-				else if (this.currentStreet.kstack1 != null && this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null && !this.unparking) {
+				else if (this.currentStreet.kstack2 != null && this.currentStreet.kstack2 == this.kstack && this.currentStreet.kstack2.car == null && this.currentStreet.kstack2.carAtLastTick == null && !this.unparking) {
 					this.currentStreet.kstack2.car = this;
 					this.currentStreet = this.currentStreet.kstack2;
 					clearTileBehindCar();
 				}
 				
 				// neither kstack is the correct one and the car keeps moving forward
-				else if (this.currentStreet.next1.car == null && isNextTileFree(currentStreet.next1)) {
+				else if (isNextTileFree(this.currentStreet.next1)) {
 					this.currentStreet.next1.car = this;
 					this.currentStreet = this.currentStreet.next1;
 					clearTileBehindCar();
@@ -139,7 +139,7 @@ public class Car {
 			
 			// Drive nowhere but stall one tick:
 			else if (this.drivingTarget[0].direction == 'N') {
-				; // do nothing
+				; // do nothing -- this means the car idles at its current position for one round
 			}
 			
 			
@@ -225,7 +225,7 @@ public class Car {
 	
 	
 	private boolean isNextTileFree(Street street) {
-		if ((street.blockingKStack == this.kstack || street.blockingKStack == null) && street.car == null)
+		if ((street.blockingKStack == this.kstack || street.blockingKStack == null) && street.car == null && street.carAtLastTick == null)
 			return true;
 		return false;
 	}

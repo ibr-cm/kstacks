@@ -190,9 +190,9 @@ public class Main {
 		}
 		
 		
-		eventList[0].setupEvent(carList[0], 1, 95);
-		eventList[1].setupEvent(carList[1], 4, 95);
-		eventList[2].setupEvent(carList[2], 7, 20);
+		eventList[0].setupEvent(carList[0], 1, 30);
+		eventList[1].setupEvent(carList[1], 4, 22);
+		eventList[2].setupEvent(carList[2], 7, 40);
 //		eventList[3].setupEvent(carList[3], 11, 95);
 //		eventList[4].setupEvent(carList[4], 25, 95);
 //		eventList[5].setupEvent(carList[5], 30, 95);
