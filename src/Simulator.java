@@ -434,71 +434,7 @@ public class Simulator {
 					
 					
 					
-					
-					
-					
-					/*
-					
-					// The car needs new coordinates where it is supposed to go.
-					// So the kStack the car is assigned to is deleted from the cars object and the new coordinates are put in.
-					DrivingTarget[] tempTarget1 = new DrivingTarget[2];
-					tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, newUnparkEvent.kstack, true, unparkingList, newUnparkEvent);
-					tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null);
-					//System.out.println(tempTarget1[0].street+" "+tempTarget1[0].direction);
-					//System.out.println(tempTarget1[1].street+" "+tempTarget1[1].direction);
-					eventList[i].car.drivingTarget = tempTarget1;
-					eventList[i].car.unparking = true;
-	//				newUnparkEvent.carToUnpark.kstack = null;
-					
-					
-					// Get a list of cars that need to be unparked. The car closest to the street (in case there is any) will be
-					// made known to the UnparkEvent. So this can observe if the cars already proceeded up to the street.
-					// Otherwise cars will be moved up to the street first and block the street only if they are entering it right away.
-					Street tempStreet1 = eventList[i].car.currentStreet;
-					Car tempCar1 = eventList[i].car;
-					System.out.println("scheduleUnparking: "+tempCar1+" is going to unpark.");
-					int counter = 0;
-l3:					while (tempCar1 != null) {
-						while (tempStreet1.car == tempCar1) {
-							// Move to the next parking space (depends on the car size). Cars with different length could be used.55x3
-							tempStreet1 = tempStreet1.prev1;
-						}
-						if (tempStreet1.car == null) {
-							// So now the car closest to the road is found. In case this is the car, which tries to unpark, the UnparkEvent
-							// will handle that.
-							newUnparkEvent.firstInQueue = tempCar1;
-							if (tempCar1 != eventList[i].car) {
-								tempCar1.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.kstack;
-								System.out.println("car: "+tempCar1);
-							}
-							break l3;
-						} else {
-							// set the pointer to the next ..
-							tempCar1 = tempStreet1.car;
-							// .. and increase the count of cars which are in the same stack behind the car that wants to unpark
-							counter++;
-							DrivingTarget tempDrivingTarget[] = new DrivingTarget[3];
-							tempStreet1.car.parkingSpot--;
-							System.out.println("scheduleUnparking: new targets for car "+tempStreet1.car+": "+unparkingHelpSpot(counter, newUnparkEvent.kstack)+", "+newUnparkEvent.carToUnpark.currentStreet);
-							tempDrivingTarget[0] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'R', null, newUnparkEvent.kstack, true, unparkingList, null);
-							tempDrivingTarget[1] = new DrivingTarget(unparkingHelpSpot(counter, newUnparkEvent.kstack), 'N', null, null, false, unparkingList, null);
-							tempDrivingTarget[2] = new DrivingTarget(getParkingSpot(tempStreet1.car, tempStreet1.car.kstack), 'D', null, null, false, unparkingList, null);
-							tempStreet1.car.drivingTarget = tempDrivingTarget;
-							// TODO: according to the counter the final position can be calculated the car has to reach to let the
-							// car go, which unparks.
-						}
-						newUnparkEvent.carsInTheWay = counter;
-					}
-					if (tempCar1 == eventList[i].car) {
-						tempCar1.drivingTarget[0].unlockKStackForUnparking = newUnparkEvent.kstack;
-						System.out.println("car: "+tempCar1);
-					}
-					System.out.println("scheduleUnparking: "+counter+" cars are in the way.");
-					this.unparkingList.addEvent(newUnparkEvent);
-				}
-			}
-		}
-	}*/
+		
 	
 	private Street unparkingSpot(int spot, Street kstack) {
 //		System.out.println("unparkingHelpSpot: spot = "+spot+", carSize = "+carSize+", spot*carSize = "+(spot*carSize));
@@ -564,6 +500,11 @@ l3:					while (tempCar1 != null) {
 		while (tempStreet1.prev1 != null) {
 			tempStreet1 = tempStreet1.prev1;
 		}
+		// TODO
+	}
+	
+	@SuppressWarnings("unused")
+	private void checkIfSpawnsAreAffected(Street kstack) {
 		// TODO
 	}
 	
@@ -674,6 +615,7 @@ l3:					while (tempCar1 != null) {
 	}
 	
 	
+	@SuppressWarnings("unused")
 	private void printMidLane() {
 		System.out.println("Middle Lane:");
 		Street tempStreet1 = this.spawn;
@@ -687,6 +629,7 @@ l3:					while (tempCar1 != null) {
 		System.out.println();
 	}
 	
+	@SuppressWarnings("unused")
 	private void printDespawn() {
 		System.out.println("Exit of the parking Lot:");
 		Street tempStreet1 = this.crossroad;
@@ -698,6 +641,7 @@ l3:					while (tempCar1 != null) {
 	}
 	
 	
+	@SuppressWarnings("unused")
 	private void printStack(int stack) {
 		System.out.println("Stack "+stack+" (watermark: "+kstack[stack].watermark+"):");
 		Street tempStreet1 = kstack[stack];
@@ -1037,6 +981,7 @@ l2:			while (tempStreet1 != crossroad) {
 	
 	public void saveToFile( BufferedImage img, File file ) throws IOException {
 		ImageWriter writer = null;
+		@SuppressWarnings("rawtypes")
 		java.util.Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
 		if( iter.hasNext() ){
 		    writer = (ImageWriter)iter.next();
