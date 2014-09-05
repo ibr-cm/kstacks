@@ -1,10 +1,10 @@
 public class Main {
 	public static void main(String args[]) {
 		
-		int parkingRows = 3;
+		int parkingRows = 2;
 		int carSize = 3;
 		int kHeight = 3;
-		int totalCarsUsed = 3;
+		
 		
 		
 		
@@ -13,8 +13,7 @@ public class Main {
 		Despawn despawn = new Despawn();
 		
 		KStack[] kstacks = new KStack[parkingRows*6]; // first third belongs to top lane; second third belongs to middle lane; last third belongs to bottom lane;
-		Car[] carList = new Car[totalCarsUsed];
-		EventItem[] eventList = new EventItem[totalCarsUsed];
+		
 		
 		Street tempStreet1 = new Street(), tempStreet2 = new Street(); // piece of street to work with
 
@@ -184,25 +183,52 @@ public class Main {
 		//printKStacks(kstacks, carSize, kHeight);
 		
 		
+		int totalCarsUsed = 15;
+		Car[] carList = new Car[totalCarsUsed];
+		EventItem[] eventList = new EventItem[totalCarsUsed];
+		
 		for (int i=0; i<totalCarsUsed; i++) {
 			eventList[i] = new EventItem();
 			carList[i] = new Car(carSize,eventList[i], spawn, despawn, crossroad);
 		}
 		
 		
-		eventList[0].setupEvent(carList[0], 1, 30);
-		eventList[1].setupEvent(carList[1], 4, 22);
-		eventList[2].setupEvent(carList[2], 7, 40);
-//		eventList[3].setupEvent(carList[3], 11, 95);
-//		eventList[4].setupEvent(carList[4], 25, 95);
-//		eventList[5].setupEvent(carList[5], 30, 95);
-//		eventList[6].setupEvent(carList[6], 35, 95);
+		eventList[0].setupEvent(carList[0], 0, 120);
+		eventList[1].setupEvent(carList[1], 5, 135);
+		eventList[2].setupEvent(carList[2], 10, 150);
+		eventList[3].setupEvent(carList[3], 15, 165);
+		eventList[4].setupEvent(carList[4], 20, 180);
+		eventList[5].setupEvent(carList[5], 25, 195);
+		eventList[6].setupEvent(carList[6], 30, 210);
+		eventList[7].setupEvent(carList[7], 35, 225);
+		eventList[8].setupEvent(carList[8], 40, 240);
+		eventList[9].setupEvent(carList[9], 45, 255);
+		eventList[10].setupEvent(carList[10], 50, 270);
+		eventList[11].setupEvent(carList[11], 55, 285);
+		eventList[12].setupEvent(carList[12], 60, 300);
+		eventList[13].setupEvent(carList[13], 65, 315);
+		eventList[14].setupEvent(carList[14], 70, 330);
+//		eventList[10].setupEvent(carList[4], 19, 37);
+//		eventList[11].setupEvent(carList[5], 5, 34);
+//		eventList[12].setupEvent(carList[6], 34, 65);
+//		eventList[13].setupEvent(carList[1], 17, 21);
+//		eventList[14].setupEvent(carList[2], 27, 60);
+//		eventList[15].setupEvent(carList[3], 13, 39);
+//		eventList[16].setupEvent(carList[4], 29, 67);
+//		eventList[17].setupEvent(carList[5], 30, 75);
+//		eventList[18].setupEvent(carList[6], 15, 45);
+//		eventList[19].setupEvent(carList[1], 6, 26);
+//		eventList[20].setupEvent(carList[2], 3, 58);
+//		eventList[21].setupEvent(carList[3], 17, 60);
+//		eventList[22].setupEvent(carList[4], 22, 67);
+//		eventList[23].setupEvent(carList[5], 16, 65);
+//		eventList[24].setupEvent(carList[6], 31, 85);
 		
 		
 		
 		
 		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);
-		simulator.runSimulator();
+		simulator.runSimulator(400, false);
 		
 		
 		

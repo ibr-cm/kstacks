@@ -8,6 +8,7 @@ public class UnparkEvent {
 	public int carsInTheWay;
 	public KStack kstack;
 	public int carSize;
+	public boolean doneBlocking;
 	
 	
 	public UnparkEvent() {
@@ -20,6 +21,7 @@ public class UnparkEvent {
 		this.carsInTheWay = 0;
 		this.kstack = null;
 		this.carSize = 0;
+		this.doneBlocking = false;
 	}
 	
 	public void setCarSize(int carSize) {

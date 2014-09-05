@@ -3,6 +3,7 @@ public class Car {
 	public int exitTime;
 	
 	public int startstop;
+	public boolean wasMoving;
 	public int tilesMoved;
 	
 	// public char direction; // D, N, R = Drive, Neutral, Reverse
@@ -35,6 +36,8 @@ public class Car {
 	
 	public int[] color;
 	
+	public boolean disabled;
+	
 	
 	
 	
@@ -64,11 +67,20 @@ public class Car {
 		this.crossroad = crossroad;
 		this.parkingSpot = 0;
 		this.inParkingLot = false;
+		this.disabled = false;
 	}
 	
 	public void spawn() {
 		this.currentStreet = spawn;
 		spawn.car = this;
+		Street tempStreet1 = spawn;
+		if (this.size > 1) {
+			for (int i = 0; i < this.size-1; i++) {
+				tempStreet1 = tempStreet1.prev1;
+				tempStreet1.car = this;
+			}
+		}
+		
 		this.inParkingLot = true;
 		this.kstack.lockedForUnparking = true; // locks kstack against unparking
 		
@@ -80,6 +92,10 @@ public class Car {
 	}
 	
 	public void drive() {
+		if (disabled)
+			return;
+		
+		
 		// if there are at least one more driving target the car tries to drive there
 		
 		if (this.drivingTarget != null && this.drivingTarget[0] != null) {
@@ -96,6 +112,9 @@ public class Car {
 						this.lane.car = this;
 						this.currentStreet = this.lane;
 						clearTileBehindCar();
+						if (this.drivingTarget[0].continousUnblocking)
+							getPrevTile().blockingKStack = null;
+						tilesMoved++;
 					}
  				}
 				
@@ -104,6 +123,9 @@ public class Car {
 					this.currentStreet.kstack1.car = this;
 					this.currentStreet = this.currentStreet.kstack1;
 					clearTileBehindCar();
+					if (this.drivingTarget[0].continousUnblocking)
+						getPrevTile().blockingKStack = null;
+					tilesMoved++;
 				}
 				
 				// kstack2 is the one the car is supposed to enter
@@ -111,6 +133,9 @@ public class Car {
 					this.currentStreet.kstack2.car = this;
 					this.currentStreet = this.currentStreet.kstack2;
 					clearTileBehindCar();
+					if (this.drivingTarget[0].continousUnblocking)
+						getPrevTile().blockingKStack = null;
+					tilesMoved++;
 				}
 				
 				// neither kstack is the correct one and the car keeps moving forward
@@ -118,6 +143,9 @@ public class Car {
 					this.currentStreet.next1.car = this;
 					this.currentStreet = this.currentStreet.next1;
 					clearTileBehindCar();
+					if (this.drivingTarget[0].continousUnblocking)
+						getPrevTile().blockingKStack = null;
+					tilesMoved++;
 				}
 			}
 			
@@ -132,6 +160,7 @@ public class Car {
 					getPrevTile().car = this;
 					this.currentStreet.car = null;
 					this.currentStreet = this.currentStreet.prev1;
+					tilesMoved++;
 				}
 				else
 					System.out.println("drive: tile behind me was not free");
@@ -177,7 +206,8 @@ public class Car {
 						tempStreet1 = tempStreet1.prev1;
 					}
 					while (tempStreet2 != tempStreet1.prev1) {
-						tempStreet2.blockingKStack = null;
+						if (tempStreet2.blockingKStack == this.kstack)
+							tempStreet2.blockingKStack = null;
 						tempStreet2 = tempStreet2.prev1;
 					}
 				}
@@ -215,11 +245,34 @@ public class Car {
 	
 	
 	private void clearTileBehindCar() {
-		Street tempStreet1 = this.currentStreet;
-		for (int i = 0; i < this.size; i++) {
-			tempStreet1 = tempStreet1.prev1;
-		}
+		Street tempStreet1 = getLastTileOfCar(this.currentStreet);
 		tempStreet1.car = null;
+	}
+	
+	private Street getLastTileOfCar(Street street) {
+		if (street == crossroad) {
+			if (crossroad.prev1.car == this) 
+				return getLastTileOfCar(crossroad.prev1);
+			else if (crossroad.prev2.car == this) 
+				return getLastTileOfCar(crossroad.prev2);
+			else if (crossroad.prev3.car == this) 
+				return getLastTileOfCar(crossroad.prev3);
+		} else if (street.prev1.car == this)
+			return getLastTileOfCar(street.prev1);
+		return street;
+//		if (street == crossroad) {
+//			if (crossroad.prev1.car == this) {
+//				return getLastTileOfCar(crossroad.prev1);
+//			} else if (crossroad.prev2.car == this) {
+//				return getLastTileOfCar(crossroad.prev2);
+//			} else {
+//				return getLastTileOfCar(crossroad.prev3);
+//			}
+//		} else {
+//			if (street.prev1.car == this)
+//				return getLastTileOfCar(street.prev1);
+//		}
+//		return street;
 	}
 	
 	
@@ -227,6 +280,7 @@ public class Car {
 	private boolean isNextTileFree(Street street) {
 		if ((street.blockingKStack == this.kstack || street.blockingKStack == null) && street.car == null && street.carAtLastTick == null)
 			return true;
+		System.out.println(this.currentStreet+" "+crossroad.prev2+" false!");
 		return false;
 	}
 	
@@ -234,8 +288,17 @@ public class Car {
 	
 	private boolean isPrevTileFree() {
 		Street tempStreet1 = getPrevTile();
-		if (tempStreet1.car == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack))
+		System.out.println("isPrevTileFree: car: "+this+" currentStreet: "+getPrevTile());
+		if (tempStreet1.next1 == this.kstack && tempStreet1.prev1.blockingKStack != this.kstack) {
+			System.out.println("isPrevTileFree: false because street before kstack is not blocked");
+			return false;
+		}
+		if (tempStreet1.car == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
+			System.out.println("isPrevTileFree: true");
 			return true;
+		}
+		// if the street behind the car is a kstack the street before the kstack has to be blocked by said kstack
+		System.out.println("isPrevTileFree: false!");
 		return false;
 	}
 	
@@ -243,11 +306,11 @@ public class Car {
 	
 	private Street getPrevTile() {
 		Street tempStreet1 = this.currentStreet;
-		System.out.println(size);
+//		System.out.println(size);
 		for (int i=0; i < size; i++) {
 			tempStreet1 = tempStreet1.prev1;
 		}
-		System.out.println("getPrevTile: prevTile: "+tempStreet1);
+//		System.out.println("getPrevTile: prevTile: "+tempStreet1);
 		return tempStreet1;
 	}
 }
