@@ -6,11 +6,13 @@ public class Car {
 	public boolean wasMoving;
 	public int tilesMoved;
 	
+	public int verboseLevel;
+	
 	// public char direction; // D, N, R = Drive, Neutral, Reverse
 	
 	public boolean unparking;
 	
-	public boolean inParkingLot;
+	public boolean isInParkingLot;
 	
 	public int size;
 	
@@ -42,13 +44,14 @@ public class Car {
 	
 	
 	public Car() {
-		color = new int[3];
-		color[0] = 0;
-		color[1] = (int)(Math.random()*256);
-		color[2] = (int)(Math.random()*256);
+		this.color = new int[3];
+		this.color[0] = 0; // R
+		this.color[1] = (int)(Math.random()*256); // G
+		this.color[2] = (int)(Math.random()*256); // B
+		this.verboseLevel = 0;
 	}
 	
-	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad) {
+	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, int verboseLevel) {
 		color = new int[3];
 		color[0] = 0;
 		color[1] = (int)(Math.random()*256);
@@ -66,8 +69,9 @@ public class Car {
 		this.despawn = despawn;
 		this.crossroad = crossroad;
 		this.parkingSpot = 0;
-		this.inParkingLot = false;
+		this.isInParkingLot = false;
 		this.disabled = false;
+		this.verboseLevel = verboseLevel;
 	}
 	
 	public void spawn() {
@@ -81,10 +85,10 @@ public class Car {
 			}
 		}
 		
-		this.inParkingLot = true;
+		this.isInParkingLot = true;
 		this.kstack.lockedForUnparking = true; // locks kstack against unparking
 		
-		System.out.println("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+") through lane "+lane+".");
+		debugOutput("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+") through lane "+lane+".",2);
 	}
 	
 	public void setDrivingTargets(DrivingTarget[] drivingTarget) {
@@ -92,15 +96,15 @@ public class Car {
 	}
 	
 	public void drive() {
-		if (disabled)
+		if (disabled || this.drivingTarget == null)
 			return;
 		
 		
 		// if there are at least one more driving target the car tries to drive there
 		
 		if (this.drivingTarget != null && this.drivingTarget[0] != null) {
-			System.out.println("drive: driving car "+this);
-			System.out.println("drive: direction "+this.drivingTarget[0].direction+" to "+this.drivingTarget[0].street);
+			debugOutput("drive: driving car "+this,2);
+			debugOutput("drive: direction "+this.drivingTarget[0].direction+" to "+this.drivingTarget[0].street,2);
 			
 			
 			
@@ -154,16 +158,16 @@ public class Car {
 			
 			// Drive backward:
 			else if (this.drivingTarget[0].direction == 'R') {
-				System.out.println("drive: driving backwards");
+				debugOutput("drive: driving backwards",2);
 				if (isPrevTileFree()) {
-					System.out.println("drive: tile behind me was free");
+					debugOutput("drive: tile behind me was free",2);
 					getPrevTile().car = this;
 					this.currentStreet.car = null;
 					this.currentStreet = this.currentStreet.prev1;
 					tilesMoved++;
 				}
 				else
-					System.out.println("drive: tile behind me was not free");
+					debugOutput("drive: tile behind me was not free",2);
 			}
 			
 			// Drive nowhere but stall one tick:
@@ -176,32 +180,25 @@ public class Car {
 			// if the car reached its driving target
 			if (this.drivingTarget[0] != null && this.currentStreet == drivingTarget[0].street) {
 				
-				System.out.println("drive: drivingTarget of car "+this+" reached");
+				debugOutput("drive: drivingTarget of car "+this+" reached",2);
 				// if the driving target wants to unlock a stack e.g. after the last car is back in the stack
 				// after unparking a car
 				if (drivingTarget[0].unlockKStackForParking != null) {
-					//System.out.println(drivingTarget[0].unlockKStack+" "+drivingTarget[0].unlockKStack.locked);
-					//System.out.println("drive: "+drivingTarget[0].unlockKStack+" unlocked again");
 					drivingTarget[0].unlockKStackForParking.lockedForParking = false;
-//					drivingTarget[0].unlockKStack = null;
 				}
 				
-				// if a kstack is supposed to be unlocked for parking - this is the place to be! :)
+				// if a kstack is supposed to be unlocked for unparking - this is the place to be! :)
 				if (drivingTarget[0].unlockKStackForUnparking != null) {
-					//System.out.println(drivingTarget[0].unlockKStack+" "+drivingTarget[0].unlockKStack.locked);
-					//System.out.println("drive: "+drivingTarget[0].unlockKStack+" unlocked again");
 					drivingTarget[0].unlockKStackForUnparking.lockedForUnparking = false;
-//					drivingTarget[0].unlockKStack = null;
 				}
 				
 				
 				// if the car is supposed to unlock the whole street from a lock of a certain kstack
 				if (this.drivingTarget[0].releaseStreetBlock) {
 					
-					System.out.println("removing lock on streets: car = "+this+", position: "+this.currentStreet);
+//					debugOutput("drive: removing lock on streets: car = "+this+", position: "+this.currentStreet);
 					
-					Street tempStreet1 = this.currentStreet;
-					Street tempStreet2 = this.kstack.prev1;
+					Street tempStreet1 = this.currentStreet, tempStreet2 = this.kstack.prev1;
 					while (tempStreet1.prev1.car == this) {
 						tempStreet1 = tempStreet1.prev1;
 					}
@@ -221,7 +218,6 @@ public class Car {
 				
 				
 				// now reduce the list of driving target by 1
-				// TODO implement a linked list to simplify this kind of list item reducing
 				if (drivingTarget.length == 1) {
 					this.drivingTarget = null;
 				} else {
@@ -232,13 +228,8 @@ public class Car {
 					drivingTarget = tempDrivingTarget;
 				}
 				this.firstRide = false;
-				
-				
-				
-				
-				System.out.println("drive: drivingTarget now: "+drivingTarget);
+				debugOutput("drive: drivingTarget now: "+drivingTarget,2);
 			}
-
 		}
 	}
 	
@@ -280,7 +271,7 @@ public class Car {
 	private boolean isNextTileFree(Street street) {
 		if ((street.blockingKStack == this.kstack || street.blockingKStack == null) && street.car == null && street.carAtLastTick == null)
 			return true;
-		System.out.println(this.currentStreet+" "+crossroad.prev2+" false!");
+		debugOutput(this.currentStreet+" "+crossroad.prev2+" false!",2);
 		return false;
 	}
 	
@@ -288,17 +279,17 @@ public class Car {
 	
 	private boolean isPrevTileFree() {
 		Street tempStreet1 = getPrevTile();
-		System.out.println("isPrevTileFree: car: "+this+" currentStreet: "+getPrevTile());
+		debugOutput("isPrevTileFree: car: "+this+" currentStreet: "+getPrevTile(),2);
 		if (tempStreet1.next1 == this.kstack && tempStreet1.prev1.blockingKStack != this.kstack) {
-			System.out.println("isPrevTileFree: false because street before kstack is not blocked");
+			debugOutput("isPrevTileFree: false because street before kstack is not blocked",2);
 			return false;
 		}
 		if (tempStreet1.car == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
-			System.out.println("isPrevTileFree: true");
+			debugOutput("isPrevTileFree: true",2);
 			return true;
 		}
 		// if the street behind the car is a kstack the street before the kstack has to be blocked by said kstack
-		System.out.println("isPrevTileFree: false!");
+		debugOutput("isPrevTileFree: false!",2);
 		return false;
 	}
 	
@@ -306,11 +297,15 @@ public class Car {
 	
 	private Street getPrevTile() {
 		Street tempStreet1 = this.currentStreet;
-//		System.out.println(size);
 		for (int i=0; i < size; i++) {
 			tempStreet1 = tempStreet1.prev1;
 		}
-//		System.out.println("getPrevTile: prevTile: "+tempStreet1);
 		return tempStreet1;
+	}
+	
+	private void debugOutput(String text, int priority) {
+		if (priority <= this.verboseLevel) {
+			System.out.println(text);
+		}
 	}
 }

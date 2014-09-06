@@ -1,7 +1,7 @@
 public class Main {
 	public static void main(String args[]) {
 		
-		int parkingRows = 2;
+		int parkingRows = 100;
 		int carSize = 3;
 		int kHeight = 3;
 		
@@ -184,12 +184,13 @@ public class Main {
 		
 		
 		int totalCarsUsed = 31;
+		int verboseLevel = 2;
 		Car[] carList = new Car[totalCarsUsed];
 		EventItem[] eventList = new EventItem[totalCarsUsed];
 		
 		for (int i=0; i<totalCarsUsed; i++) {
 			eventList[i] = new EventItem();
-			carList[i] = new Car(carSize,eventList[i], spawn, despawn, crossroad);
+			carList[i] = new Car(carSize,eventList[i], spawn, despawn, crossroad, verboseLevel);
 		}
 		
 		for (int i = 0; i < totalCarsUsed; i++) {
@@ -247,7 +248,13 @@ public class Main {
 		
 		
 		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);
-		simulator.runSimulator(0, false);
+		
+		
+		// arg[0]: maximum ticks to run (0: max ticks disabled)
+		// arg[1]: true: all cars go to kstack[0] -- false: cars get evenly distributed
+		// arg[2]: visual output enable
+		// arg[3]: cli verbose level -- 0: nothing -- 1: despawn events only -- 2: all
+		simulator.runSimulator(0, false, true, verboseLevel);
 		
 		
 		
