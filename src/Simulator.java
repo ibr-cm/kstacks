@@ -83,6 +83,8 @@ public class Simulator {
 			moveCars();
 			debugOutput("Moved Cars",2);
 			
+			checkForStartsStops();
+			
 			refreshStreets();
 			
 			despawnCar();
@@ -457,15 +459,30 @@ public class Simulator {
 		while (tempStreet1.prev1 != null) {
 			tempStreet1 = tempStreet1.prev1;
 		}
-		// TODO
+		tempStreet1.refresh(this.tick);
+		while (tempStreet1.next1 != null) {
+			tempStreet1 = tempStreet1.next1;
+			tempStreet1.refresh(this.tick);
+		}
+		tempStreet1 = spawn.next2;
+		tempStreet1.refresh(this.tick);
+		while (tempStreet1.next1 != null) {
+			tempStreet1 = tempStreet1.next1;
+			tempStreet1.refresh(this.tick);
+		}
+		tempStreet1 = spawn.next3;
+		tempStreet1.refresh(this.tick);
+		while (tempStreet1.next1 != null) {
+			tempStreet1 = tempStreet1.next1;
+			tempStreet1.refresh(this.tick);
+		}
 	}
 	
-	@SuppressWarnings("unused")
-	private void checkIfSpawnsAreAffected(Street kstack) {
-		// TODO
+	
+	private void checkForStartsStops() {
+		for (int i = 0; i < carList.length; i++)
+			carList[i].checkForStartsStops(this.tick);
 	}
-	
-	
 	
 	
 	
@@ -623,6 +640,7 @@ public class Simulator {
 		debugOutput("Exit Time: "+item.exitTime,1);
 		debugOutput("Delayed due to parking: "+item.backOrderDelay,1);
 		debugOutput("Moved Tiles: "+item.car.tilesMoved,1);
+		debugOutput("Starts, Stops: "+item.car.startstop, 1);
 		debugOutput("==========",1);
 	}
 	

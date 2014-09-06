@@ -20,14 +20,6 @@ public class Street {
 		this.watermark = 0;
 	}
 	
-	public void blockSpace(int i, Street kstack) {
-		
-	}
-	
-	public void unblockSpace(int i) {
-		
-	}
-	
 	// this ensures, that streets remember whether or not a car
 	// was on this street last tick.
 	public void refresh(int tick) {

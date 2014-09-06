@@ -2,6 +2,7 @@
 public class EventItem {
 	public Car car;
 	public int entryTime; // in ticks -- time when car enters the parking lot
+	public int entryDelay; // in ticks -- time the car had to wait until entering the lot
 	public int backOrderTime; // in ticks -- time when car is ordered off the parking lot
 	public int backOrderDelay; // in ticks --  if a stack is locked this will be increased
 	public int exitTime; // in ticks -- time when car actually exits parking lot

@@ -38,7 +38,7 @@ public class UnparkEvent {
 		} else {
 			this.next.addEvent(nextEvent);
 		}
-		System.out.println("New UnparkEvent "+nextEvent+" has been added to the queue.");
+//		System.out.println("New UnparkEvent "+nextEvent+" has been added to the queue.");
 	}
 	
 	public void pop(UnparkEvent first) {

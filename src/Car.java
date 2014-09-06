@@ -24,6 +24,7 @@ public class Car {
 	public Crossroad crossroad;
 	
 	public Street currentStreet;
+	public Street lastCurrentStreet;
 	
 	public DrivingTarget[] drivingTarget;
 	
@@ -49,6 +50,7 @@ public class Car {
 		this.color[1] = (int)(Math.random()*256); // G
 		this.color[2] = (int)(Math.random()*256); // B
 		this.verboseLevel = 0;
+		this.wasMoving = false;
 	}
 	
 	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, int verboseLevel) {
@@ -61,6 +63,7 @@ public class Car {
 		this.currentStreet = null;
 		this.drivingTarget = null;
 		this.streetAtLastTick = null;
+		this.wasMoving = false;
 		this.startstop = 0;
 		this.tilesMoved = 0;
 		this.eventItem = eventItem;
@@ -251,19 +254,6 @@ public class Car {
 		} else if (street.prev1.car == this)
 			return getLastTileOfCar(street.prev1);
 		return street;
-//		if (street == crossroad) {
-//			if (crossroad.prev1.car == this) {
-//				return getLastTileOfCar(crossroad.prev1);
-//			} else if (crossroad.prev2.car == this) {
-//				return getLastTileOfCar(crossroad.prev2);
-//			} else {
-//				return getLastTileOfCar(crossroad.prev3);
-//			}
-//		} else {
-//			if (street.prev1.car == this)
-//				return getLastTileOfCar(street.prev1);
-//		}
-//		return street;
 	}
 	
 	
@@ -307,5 +297,17 @@ public class Car {
 		if (priority <= this.verboseLevel) {
 			System.out.println(text);
 		}
+	}
+	
+	public void checkForStartsStops(int tick) {
+		if (this.currentStreet == null || !this.isInParkingLot)
+			return;
+		else if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
+			this.startstop++;
+			this.wasMoving = !this.wasMoving;
+			if (this.startstop > 1 && this.eventItem.entryTime == 270)
+				System.out.println("tick: "+tick);
+		}
+		this.lastCurrentStreet = this.currentStreet;
 	}
 }

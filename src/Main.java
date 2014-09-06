@@ -1,7 +1,7 @@
 public class Main {
 	public static void main(String args[]) {
 		
-		int parkingRows = 100;
+		int parkingRows = 2;
 		int carSize = 3;
 		int kHeight = 3;
 		
@@ -184,7 +184,7 @@ public class Main {
 		
 		
 		int totalCarsUsed = 31;
-		int verboseLevel = 2;
+		int verboseLevel = 0;
 		Car[] carList = new Car[totalCarsUsed];
 		EventItem[] eventList = new EventItem[totalCarsUsed];
 		
