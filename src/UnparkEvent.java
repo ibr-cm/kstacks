@@ -42,7 +42,7 @@ public class UnparkEvent {
 	 */
 	public UnparkEvent() {
 		this.first = false;
-		this.next = null;
+		this.next = null; 	
 		this.carToUnpark = null;
 		this.firstInQueue = null;
 		this.carsInTheWay = 0;
@@ -84,8 +84,7 @@ public class UnparkEvent {
 	 * @param carToUnpark the car which is supposed to leave its spot
 	 */
 	public void setCarToUnpark(Car carToUnpark) {
-		if (carToUnpark == null)
-			this.carToUnpark = carToUnpark;
+		this.carToUnpark = carToUnpark;
 	}
 	
 	/**
@@ -101,5 +100,4 @@ public class UnparkEvent {
 	/* GET METHODS */
 	public Car getCarToUnpark() {return this.carToUnpark;}
 	public KStack getKStack() {return this.carToUnpark.kstack;}
-	
 }
