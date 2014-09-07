@@ -38,6 +38,7 @@ public class EventItem {
 	public void fulfill(int tick) {
 		this.fulfilled = true;
 		this.exitTime = tick;
+		this.car.leaveParkingLot();
 	}
 
 	public void increaseBackOrderDelay() {

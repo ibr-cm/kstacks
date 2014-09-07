@@ -12,7 +12,7 @@ public class Car {
 	
 	public boolean unparking;
 	
-	public boolean isInParkingLot;
+	private boolean isInParkingLot;
 	
 	public int size;
 	
@@ -35,7 +35,6 @@ public class Car {
 	public EventItem eventItem;
 	
 	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
-	public boolean done; // true if successfully left the parking lot
 	
 	public int[] color;
 	
@@ -299,13 +298,34 @@ public class Car {
 		}
 	}
 	
-	public void checkForStartsStops(int tick) {
-		if (this.currentStreet == null || !this.isInParkingLot)
-			return;
-		else if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
+	/**
+	 * This method counts the starts and stops the car performed during the
+	 * duration of time it spent inside the parking lot. Starts and Stops are
+	 * not counted seperately since it always starts with a Start and both
+	 * events occur interleaving.
+	 */
+	public void checkForStartsStops() {
+		if (this.currentStreet != null && this.isInParkingLot && ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving))) {
 			this.startstop++;
 			this.wasMoving = !this.wasMoving;
+			this.lastCurrentStreet = this.currentStreet;
 		}
-		this.lastCurrentStreet = this.currentStreet;
+	}
+	
+	/**
+	 * If the car left the parking lot this boolean is set to false to reduce
+	 * the load for the simulator and suppress unneeded or dangerous routines
+	 * (e.g. trying to move the car) from perfoming.
+	 */
+	public void leaveParkingLot() {
+		this.isInParkingLot = false;
+	}
+	
+	/**
+	 * Checks if the car is still in the parking lot.
+	 * @return boolean whether or not the car is inside the parking lot
+	 */
+	public boolean isInParkingLot() {
+		return this.isInParkingLot;
 	}
 }
