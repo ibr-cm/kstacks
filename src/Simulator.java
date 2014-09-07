@@ -49,7 +49,7 @@ public class Simulator {
 			this.spawnList[i] = null;
 		}
 		this.unparkingList = new UnparkEvent();
-		this.unparkingList.setFirst();
+		this.unparkingList.setHead();
 		this.visualOutput = false;
 		this.verboseLevel = 2;
 	}
@@ -143,7 +143,7 @@ public class Simulator {
 		for (int i=0; i<totalCarsUsed; i++) {
 			
 			// check if a car is supposed to spawn
-			if (eventList[i].entryTime == tick) {
+			if (eventList[i].getEntryTime() == tick) {
 				debugOutput("==========",2);
 				debugOutput("checkForSpawns: Put a car on spawn list at "+this.tick+" tick(s).",2);
 				
@@ -159,7 +159,7 @@ public class Simulator {
 					eventList[i].exitTime = tick-1;
 					debugOutput("checkForSpawn: a car tried to spawn but parkingLot is full",2);
 					debugOutput("checkForSpawn: event: "+eventList[i],2);
-					debugOutput("checkForSpawn: entryTime: "+eventList[i].entryTime+", backOrderTime: "+eventList[i].backOrderTime+", exitTime"+eventList[i].exitTime,2);
+					debugOutput("checkForSpawn: entryTime: "+eventList[i].getEntryTime()+", backOrderTime: "+eventList[i].backOrderTime+", exitTime"+eventList[i].exitTime,2);
 					return;
 				}
 				
@@ -202,18 +202,18 @@ public class Simulator {
 				debugOutput("spawnCar: Car was put on stack "+index+" ("+this.kstack[index]+").",2);
 				
 				// assign kstack to a car
-				spawnList[0].car.kstack = kstack[index];
+				spawnList[0].getCar().kstack = kstack[index];
 				if (index/(kstack.length/3)==0) {
-					spawnList[0].car.lane = spawn.next1;
+					spawnList[0].getCar().lane = spawn.next1;
 				} else if (index/(kstack.length/3)==1) {
-					spawnList[0].car.lane = spawn.next2;
+					spawnList[0].getCar().lane = spawn.next2;
 				} else {
-					spawnList[0].car.lane = spawn.next3;
+					spawnList[0].getCar().lane = spawn.next3;
 				}
 				
 				// assign parkingSpot to the car
-				debugOutput("spawnCar: assigned parking spot: "+spawnList[0].car.parkingSpot,2);
-				spawnList[0].car.parkingSpot = kstack[index].watermark;
+				debugOutput("spawnCar: assigned parking spot: "+spawnList[0].getCar().parkingSpot,2);
+				spawnList[0].getCar().parkingSpot = kstack[index].watermark;
 				
 				// increment the cars stored in this kstack
 				kstack[index].watermark++;
@@ -221,22 +221,22 @@ public class Simulator {
 								
 				
 				// put the car down at the spawn
-				spawnList[0].car.spawn();
+				spawnList[0].getCar().spawn();
 				
 				// setup driving target, which is essential the final parking position
-				Street tempStreet1 = spawnList[0].car.kstack;
+				Street tempStreet1 = spawnList[0].getCar().kstack;
 				
 				// the kstack is locked for unparking but not for parking 
-				spawnList[0].car.kstack.lockedForUnparking = true;
+				spawnList[0].getCar().kstack.lockedForUnparking = true;
 //				debugOutput("spawnCar: carSize "+carSize);
-				debugOutput("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].car.parkingSpot+" and lockedForUnparking is "+spawnList[0].car.kstack.lockedForUnparking,2);
+				debugOutput("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].getCar().parkingSpot+" and lockedForUnparking is "+spawnList[0].getCar().kstack.lockedForUnparking,2);
 				// fin the right spot where to park exactly
-				tempStreet1 = getParkingSpot(spawnList[0].car, spawnList[0].car.kstack);
+				tempStreet1 = getParkingSpot(spawnList[0].getCar(), spawnList[0].getCar().kstack);
 				
 				debugOutput("spawnCar: Final parking position: "+tempStreet1,2);
 				DrivingTarget[] targets = new DrivingTarget[1];
-				targets[0] = new DrivingTarget(tempStreet1, 'D', spawnList[0].car.kstack, null, false, unparkingList, null, false);
-				spawnList[0].car.setDrivingTargets(targets);
+				targets[0] = new DrivingTarget(tempStreet1, 'D', spawnList[0].getCar().kstack, null, false, unparkingList, null, false);
+				spawnList[0].getCar().setDrivingTargets(targets);
 				
 				// shift the whole list one item down
 				for (int i=0; i<totalCarsUsed-1; i++) {
@@ -288,41 +288,41 @@ public class Simulator {
 	private void checkForUnparkingEvents() {
 		// Create a new UnparkEvent for every car that wants to unpark.
 		for (int i=0; i<totalCarsUsed; i++) {
-			if (eventList[i].backOrderTime + eventList[i].backOrderDelay == tick) {
-				if (eventList[i].car.kstack.lockedForUnparking) {
+			if (eventList[i].backOrderTime + eventList[i].getBackOrderDelay() == tick) {
+				if (eventList[i].getCar().kstack.lockedForUnparking) {
 					debugOutput("==========",2);
-					eventList[i].backOrderDelay++;
+					eventList[i].increaseBackOrderDelay();
 					debugOutput("checkForUnparkingEvents: was delayed because the kstack was locked",2);
 					debugOutput("==========",2);
 				} else {
 					debugOutput("==========",2);
 					debugOutput("scheduleUnparking: Creating an unparking Event at "+this.tick+" tick(s).",2);
 					UnparkEvent newUnparkEvent = new UnparkEvent();
-					newUnparkEvent.setCarSize(carSize);
-					newUnparkEvent.setCarToUnpark(eventList[i].car); // Car that wants to leave its spot.
-					newUnparkEvent.setKStack();
-					newUnparkEvent.kstack.watermark--;
-					newUnparkEvent.kstack.lockedForParking = true;
-					newUnparkEvent.kstack.lockedForUnparking = true;
+//					newUnparkEvent.setCarSize(carSize);
+					newUnparkEvent.setCarToUnpark(eventList[i].getCar()); // Car that wants to leave its spot.
+//					newUnparkEvent.setKStack();
+					newUnparkEvent.getKStack().watermark--;
+					newUnparkEvent.getKStack().lockedForParking = true;
+					newUnparkEvent.getKStack().lockedForUnparking = true;
 					
-					eventList[i].car.unparking = true;
+					eventList[i].getCar().unparking = true;
 					
 					int counter = 0;
 					
 					// decide whether there is one car which has to unpark or more than one car
-					Street tempStreet1 = eventList[i].car.currentStreet;
-					while (tempStreet1.car == eventList[i].car)
+					Street tempStreet1 = eventList[i].getCar().currentStreet;
+					while (tempStreet1.car == eventList[i].getCar())
 						tempStreet1 = tempStreet1.prev1;
 					
 					// only one car unparking
 					if (tempStreet1.car == null) {
 						debugOutput("checkForUnparkingEvents: found just 1 car!",2);
 						newUnparkEvent.carsInTheWay = 0;
-						newUnparkEvent.firstInQueue = eventList[i].car;
+						newUnparkEvent.firstInQueue = eventList[i].getCar();
 						
 						
 						// find street right before entering the street
-						Street tempStreet2 = eventList[i].car.kstack;
+						Street tempStreet2 = eventList[i].getCar().kstack;
 						if (carSize > 1) {
 							for (int j = 0; j < carSize-1; j++) {
 								tempStreet2 = tempStreet2.next1;
@@ -332,10 +332,10 @@ public class Simulator {
 						
 						DrivingTarget[] tempTarget1 = new DrivingTarget[2];
 						// drive to the right position 
-						tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', newUnparkEvent.kstack, newUnparkEvent.kstack, true, unparkingList, newUnparkEvent, false);
+						tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', newUnparkEvent.getKStack(), newUnparkEvent.getKStack(), true, unparkingList, newUnparkEvent, false);
 						tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null, false);
 						
-						eventList[i].car.drivingTarget = tempTarget1;
+						eventList[i].getCar().drivingTarget = tempTarget1;
 						
 						
 					} else { // more than one car
@@ -345,10 +345,10 @@ public class Simulator {
 						DrivingTarget[] tempTarget1 = new DrivingTarget[2];
 						tempTarget1[0] = new DrivingTarget(newUnparkEvent.carToUnpark.kstack.prev1, 'R', null, newUnparkEvent.carToUnpark.kstack, false, unparkingList, newUnparkEvent, false);
 						tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null, false);
-						eventList[i].car.drivingTarget = tempTarget1;
+						eventList[i].getCar().drivingTarget = tempTarget1;
 						
 						// all other cars
-						Car tempCar1 = eventList[i].car;
+						Car tempCar1 = eventList[i].getCar();
 						newUnparkEvent.carsInTheWay = 0;
 						
 						while (tempStreet1.car != null) {
@@ -364,16 +364,16 @@ public class Simulator {
 								
 								DrivingTarget tempDrivingTarget[] = new DrivingTarget[3];
 								tempStreet1.car.parkingSpot--;
-								debugOutput("scheduleUnparking: new targets for car "+tempStreet1.car+": "+unparkingSpot(counter, newUnparkEvent.kstack)+", "+newUnparkEvent.carToUnpark.currentStreet,2);
-								tempDrivingTarget[0] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.kstack), 'R', null, newUnparkEvent.kstack, false, unparkingList, null, false);
-								tempDrivingTarget[1] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.kstack), 'N', null, null, false, unparkingList, null, false);
+								debugOutput("scheduleUnparking: new targets for car "+tempStreet1.car+": "+unparkingSpot(counter, newUnparkEvent.getKStack())+", "+newUnparkEvent.carToUnpark.currentStreet,2);
+								tempDrivingTarget[0] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'R', null, newUnparkEvent.getKStack(), false, unparkingList, null, false);
+								tempDrivingTarget[1] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'N', null, null, false, unparkingList, null, false);
 								tempDrivingTarget[2] = new DrivingTarget(getParkingSpot(tempStreet1.car, tempStreet1.car.kstack), 'D', null, null, false, unparkingList, null, false);
 								tempCar1.drivingTarget = tempDrivingTarget;
 								
 							}
 							tempStreet1 = tempStreet1.prev1;
 						}
-						newUnparkEvent.firstInQueue.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.kstack;
+						newUnparkEvent.firstInQueue.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.getKStack();
 						newUnparkEvent.firstInQueue.drivingTarget[2].continousUnblocking = true;
 					}
 					this.unparkingList.addEvent(newUnparkEvent);
@@ -409,9 +409,9 @@ public class Simulator {
 			tempUnparkEvent1 = tempUnparkEvent1.next;
 			
 			// Cars are now at the street.
-			if (tempUnparkEvent1.kstack.car != null && !tempUnparkEvent1.doneBlocking) {
+			if (tempUnparkEvent1.getKStack().car != null && !tempUnparkEvent1.doneBlocking) {
 				debugOutput("checkForStreetBlocking: car is at the street ("+tempUnparkEvent1+")",2);
-				Street tempStreet1 = tempUnparkEvent1.kstack.prev1;
+				Street tempStreet1 = tempUnparkEvent1.getKStack().prev1;
 				
 				// Checking if the street is blocked.
 				boolean spaceIsFree = true;
@@ -426,7 +426,7 @@ public class Simulator {
 				
 				// If not the street can be blocked.
 				if (spaceIsFree) { // && tempUnparkEvent1.carsInTheWay == 0) {
-					blockStreets(tempUnparkEvent1.kstack, ((tempUnparkEvent1.carsInTheWay+1)*this.carSize));
+					blockStreets(tempUnparkEvent1.getKStack(), ((tempUnparkEvent1.carsInTheWay+1)*this.carSize));
 					tempUnparkEvent1.doneBlocking = true;
 					tempUnparkEvent1.firstInQueue.disabled = false;
 				} else {
@@ -634,13 +634,13 @@ public class Simulator {
 	private void printEventItem(EventItem item) {
 		if (verboseLevel == 1)
 			debugOutput("==========",1);
-		debugOutput("EventItem "+item+" of car "+item.car,1);
-		debugOutput("Entry Time: "+item.entryTime,1);
+		debugOutput("EventItem "+item+" of car "+item.getCar(),1);
+//		debugOutput("Entry Time: "+item.entryTime,1);
 		debugOutput("BackOrder Time: "+item.backOrderTime,1);
 		debugOutput("Exit Time: "+item.exitTime,1);
-		debugOutput("Delayed due to parking: "+item.backOrderDelay,1);
-		debugOutput("Moved Tiles: "+item.car.tilesMoved,1);
-		debugOutput("Starts, Stops: "+item.car.startstop, 1);
+		debugOutput("Delayed due to parking: "+item.getBackOrderDelay(),1);
+		debugOutput("Moved Tiles: "+item.getCar().tilesMoved,1);
+		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
 		debugOutput("==========",1);
 	}
 	

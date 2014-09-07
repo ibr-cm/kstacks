@@ -305,8 +305,6 @@ public class Car {
 		else if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
 			this.startstop++;
 			this.wasMoving = !this.wasMoving;
-			if (this.startstop > 1 && this.eventItem.entryTime == 270)
-				System.out.println("tick: "+tick);
 		}
 		this.lastCurrentStreet = this.currentStreet;
 	}
