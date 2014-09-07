@@ -14,7 +14,7 @@ public class UnparkEvent {
 	 * Pointer to the car, which is supposed to leave its parking spot and
 	 * leave the parking lot.
 	 */
-	public Car carToUnpark;
+	private Car carToUnpark;
 	
 	/**
 	 * Pointer to the car, which is closest to the road.
@@ -27,10 +27,6 @@ public class UnparkEvent {
 	 */
 	public int carsInTheWay;
 	
-//	/**
-//	 * Level of debug output: 0,1: no output -- 2: output
-//	 */
-//	private int verboseLevel;
 	
 	/**
 	 * This kind of shows the progress of the UnparkEvent. After the street is
@@ -50,15 +46,8 @@ public class UnparkEvent {
 		this.carToUnpark = null;
 		this.firstInQueue = null;
 		this.carsInTheWay = 0;
-//		this.kstack = null;
-//		this.carSize = 0;
 		this.doneBlocking = false;
-//		this.verboseLevel = 0;
 	}
-	
-//	public void setVerboseLevel(int level) {
-//		this.verboseLevel = level;
-//	}
 	
 	/**
 	 * TODO get rid of this
@@ -95,7 +84,8 @@ public class UnparkEvent {
 	 * @param carToUnpark the car which is supposed to leave its spot
 	 */
 	public void setCarToUnpark(Car carToUnpark) {
-		this.carToUnpark = carToUnpark;
+		if (carToUnpark == null)
+			this.carToUnpark = carToUnpark;
 	}
 	
 	/**
@@ -107,21 +97,9 @@ public class UnparkEvent {
 		this.firstInQueue = carFirstInQueue;
 	}
 	
-	/**
-	 * Sets the kstack of the UnparkEvent.
-	 */
-	public KStack getKStack() {
-		return this.carToUnpark.kstack;
-	}
+
+	/* GET METHODS */
+	public Car getCarToUnpark() {return this.carToUnpark;}
+	public KStack getKStack() {return this.carToUnpark.kstack;}
 	
-//	/**
-//	 * Standard output method which prints information depending on the verbose level.
-//	 * @param text the message to print into console
-//	 * @param priority 0,1: no text -- 2: all text
-//	 */
-//	private void debugOutput(String text, int priority) {
-//		if (priority <= this.verboseLevel) {
-//			System.out.println(text);
-//		}
-//	}
 }

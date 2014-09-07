@@ -26,7 +26,7 @@ public class Street {
 	 * Latest tick at which this street was refreshed. This assures that a this
 	 * street can only be refreshed once per tick.
 	 */
-	public int lastRefresh;
+	private int lastRefresh;
 	
 	/**
 	 * Describes how many cars are piled into this kStack.  
