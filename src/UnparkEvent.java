@@ -94,8 +94,7 @@ public class UnparkEvent {
 	 */
 	public void setCarFirstInQueue(Car carFirstInQueue) {
 		this.firstInQueue = carFirstInQueue;
-	}
-	
+	}	
 
 	/* GET METHODS */
 	public Car getCarToUnpark() {return this.carToUnpark;}
