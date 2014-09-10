@@ -1,4 +1,12 @@
+import au.com.bytecode.opencsv.CSV;
+import au.com.bytecode.opencsv.CSVReadProc;
+
+
 public class Main {
+	
+	private static int totalCarsUsed, entryTime[], exitTime[];
+	
+	
 	public static void main(String args[]) {
 		
 		int parkingRows = 2;
@@ -183,18 +191,44 @@ public class Main {
 		//printKStacks(kstacks, carSize, kHeight);
 		
 		
-		int totalCarsUsed = 31;
-		int verboseLevel = 0;
+
+		CSV csv = CSV
+			    .separator(',')  // delimiter of fields
+			    .quote('"')      // quote character
+			    .create();       // new instance is immutable
+		
+		csv.read("test.csv", new CSVReadProc() {
+		    public void procRow(int rowIndex, String... values) {
+		    	totalCarsUsed = rowIndex+1;
+		    }
+		});
+		
+		entryTime = new int[totalCarsUsed];
+		exitTime = new int[totalCarsUsed];
+		
+		
+		csv.read("test.csv", new CSVReadProc() {
+		    public void procRow(int rowIndex, String... values) {
+		        entryTime[rowIndex] = Integer.valueOf(values[0]);
+		        exitTime[rowIndex] = Integer.valueOf(values[1]);
+//		        System.out.println(values[1]);
+		    }
+		});
+		
+		
+		int verboseLevel = 1;
 		Car[] carList = new Car[totalCarsUsed];
 		EventItem[] eventList = new EventItem[totalCarsUsed];
 		
 		for (int i=0; i<totalCarsUsed; i++) {
 			eventList[i] = new EventItem();
-			carList[i] = new Car(carSize,eventList[i], spawn, despawn, crossroad, verboseLevel);
+			carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, verboseLevel);
 		}
 		
+		
+		
 		for (int i = 0; i < totalCarsUsed; i++) {
-			eventList[i].setupEvent(carList[i], i*10, 100+i*15);
+			eventList[i].setupEvent(carList[i], entryTime[i], exitTime[i]);
 		}
 		
 //		eventList[0].setupEvent(carList[0], 0, 120);
