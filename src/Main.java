@@ -1,30 +1,209 @@
+import au.com.bytecode.opencsv.CSV;
+import au.com.bytecode.opencsv.CSVReadProc;
+
+
 public class Main {
+	
+	private static int totalCarsUsed, entryTime[], exitTime[], carSize, parkingRows, kHeight, verboseLevel;
+	private static Spawn spawn;
+	private static Crossroad crossroad;
+	private static Despawn despawn;
+	private static KStack kstacks[];
+	
 	public static void main(String args[]) {
-		int parkingRows = 30;
-		int carSize = 1;
-		int kHeight = 4;
+		
+		parkingRows = 2;
+		carSize = 3;
+		kHeight = 3;
+		
+		verboseLevel = 1;
+		
+		spawn = new Spawn();
+		crossroad = new Crossroad();
+		despawn = new Despawn();
+		
+		// first third belongs to top lane; second third belongs to middle lane
+		// last third belongs to bottom lane;
+		kstacks = new KStack[parkingRows*6]; 
 		
 		
-		
-		
-		Spawn spawn = new Spawn();
-		Crossroad crossroad = new Crossroad();
-		Despawn despawn = new Despawn();
-		
-		KStack[] kstacks = new KStack[parkingRows*6]; // first third belongs to top lane; second third belongs to middle lane; last third belongs to bottom lane;
-		
-		
-		Street tempStreet1 = new Street(), tempStreet2 = new Street(); // piece of street to work with
+		// setting up the entire map
+		setupMap();
 
 		
 		
-		/*
-		 ****************************************************************
-		 * SETUP
-		 ****************************************************************
-		 */
+		
+		// instance of the csv parser
+		CSV csv = CSV
+			    .separator(',')  // delimiter of fields
+			    .quote('"')      // quote character
+			    .create();       // new instance is immutable
+		
+		// evaluate the number of lines inside the file to calculate the number
+		// of Cars and EventItem needed for the simulation
+		csv.read("test.csv", new CSVReadProc() {
+		    public void procRow(int rowIndex, String... values) {
+		    	totalCarsUsed = rowIndex+1;
+		    }
+		});
+		
+		// create to arrays with the values of every car
+		entryTime = new int[totalCarsUsed];
+		exitTime = new int[totalCarsUsed];
+		
+		// fill the arrays with data concerning the entry and exit tick
+		csv.read("test.csv", new CSVReadProc() {
+		    public void procRow(int rowIndex, String... values) {
+		        entryTime[rowIndex] = Integer.valueOf(values[0]);
+		        exitTime[rowIndex] = Integer.valueOf(values[1]);
+//		        System.out.println(values[1]);
+		    }
+		});
 		
 		
+		Car[] carList = new Car[totalCarsUsed];
+		EventItem[] eventList = new EventItem[totalCarsUsed];
+		
+		// creating the number of cars and events needed
+		for (int i=0; i<totalCarsUsed; i++) {
+			eventList[i] = new EventItem();
+			carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, verboseLevel);
+		}
+		
+		// fill data into the events
+		for (int i = 0; i < totalCarsUsed; i++) {
+			eventList[i].setupEvent(carList[i], entryTime[i], exitTime[i]);
+		}
+		
+		// create an instance of the simulator itself
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);
+		
+		
+		// run the simulator
+		simulator.runSimulator(0, false, true, verboseLevel);
+		
+		// do some statistics
+		evaluateResults();
+		
+		
+		
+	}
+	
+	public static void printLayout(Spawn spawn, Despawn despawn, Crossroad crossroad) {
+		Street tempStreet2 = new Street();
+		System.out.println("lane before spawn:");
+
+		System.out.println();
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		// print out the streets before the spawn
+		tempStreet2 = spawn;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		while (tempStreet2.prev1 != null) {
+			tempStreet2 = tempStreet2.prev1;
+			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		}
+		
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		
+		System.out.println("lane behind crossroads:");
+
+		System.out.println();
+		
+		tempStreet2 = crossroad;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		while (tempStreet2.next1 != null) {
+			tempStreet2 = tempStreet2.next1;
+			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		}
+		
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		
+		System.out.println("middle lane:");
+
+		System.out.println();
+		
+		// print middle lane
+		tempStreet2 = spawn;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		tempStreet2 = ((Spawn)(tempStreet2)).next1;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		while (tempStreet2.next1 != null ) {//&& tempStreet2 != crossroad) {
+			tempStreet2 = tempStreet2.next1;
+			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		}
+		
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		
+		System.out.println("top lane:");
+
+		System.out.println();
+		
+		// print top lane
+		tempStreet2 = spawn;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		tempStreet2 = ((Spawn)(tempStreet2)).next2;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		while (tempStreet2.next1 != null && tempStreet2 != crossroad) {
+			tempStreet2 = tempStreet2.next1;
+			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		}
+		
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		
+		System.out.println("bottom lane:");
+
+		System.out.println();
+		
+		// print bottom lane
+		tempStreet2 = spawn;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		tempStreet2 = ((Spawn)(tempStreet2)).next3;
+		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		while (tempStreet2.next1 != null && tempStreet2 != crossroad) {
+			tempStreet2 = tempStreet2.next1;
+			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
+		}
+	}
+	
+	public static void printKStacks(KStack[] kstacks, int carSize, int kHeight) {
+		for (int i=0; i<kstacks.length; i++) {
+			System.out.println(i);
+			Street tempStreet1 = kstacks[i];
+			System.out.println(tempStreet1.prev1);
+			System.out.println(tempStreet1);
+			for (int j=0; j<carSize*kHeight-1; j++) {
+				tempStreet1 = tempStreet1.next1;
+				System.out.println(tempStreet1);
+			}
+			System.out.println();
+			System.out.println();
+		}
+	}
+	
+	
+	private static void setupMap() {
+		Street tempStreet1 = new Street(), tempStreet2 = new Street(); // piece of street to work with
 		// pieces of street before spawn to drive back from kstacks close to spawn if necessary;	
 		if (carSize*kHeight>1) {
 			tempStreet2 = spawn;
@@ -170,156 +349,9 @@ public class Main {
 				tempStreet1 = tempStreet2;
 			}
 		}
-		
-		
-		
-		
-		
-		
-		
-		//printLayout(spawn, despawn, crossroad);
-		
-		//printKStacks(kstacks, carSize, kHeight);
-		
-		
-		int totalCarsUsed = 480;
-		int verboseLevel = -1, visualOutput = 1, maxTicks = 0;
-		boolean debugKStack0 = false, chaoticUnparking = true;
-		Car[] carList = new Car[totalCarsUsed];
-		EventItem[] eventList = new EventItem[totalCarsUsed];
-		
-		for (int i=0; i<totalCarsUsed; i++) {
-			eventList[i] = new EventItem();
-			carList[i] = new Car(carSize,eventList[i], spawn, despawn, crossroad, verboseLevel);
-		}
-		
-		for (int i = 0; i < totalCarsUsed; i++) {
-			//eventList[i].setupEvent(carList[i], i*7, i*7+40);
-			//eventList[i].setupEvent(carList[i], i*10+(int)(Math.random()*2), i*5+1200+(int)(Math.random()*350));
-			eventList[i].setupEvent(carList[i], 0, 1200);
-		}
-		
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows);
-		
-		simulator.runSimulator(maxTicks, debugKStack0, visualOutput, verboseLevel, chaoticUnparking);
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 	}
 	
-	public static void printLayout(Spawn spawn, Despawn despawn, Crossroad crossroad) {
-		Street tempStreet2 = new Street();
-		System.out.println("lane before spawn:");
-
-		System.out.println();
-		
-		// print out the streets before the spawn
-		tempStreet2 = spawn;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		while (tempStreet2.prev1 != null) {
-			tempStreet2 = tempStreet2.prev1;
-			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		}
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		System.out.println("lane behind crossroads:");
-
-		System.out.println();
-		
-		tempStreet2 = crossroad;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		while (tempStreet2.next1 != null) {
-			tempStreet2 = tempStreet2.next1;
-			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		}
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		System.out.println("middle lane:");
-
-		System.out.println();
-		
-		// print middle lane
-		tempStreet2 = spawn;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		tempStreet2 = ((Spawn)(tempStreet2)).next1;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		while (tempStreet2.next1 != null ) {//&& tempStreet2 != crossroad) {
-			tempStreet2 = tempStreet2.next1;
-			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		}
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		System.out.println("top lane:");
-
-		System.out.println();
-		
-		// print top lane
-		tempStreet2 = spawn;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		tempStreet2 = ((Spawn)(tempStreet2)).next2;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		while (tempStreet2.next1 != null && tempStreet2 != crossroad) {
-			tempStreet2 = tempStreet2.next1;
-			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		}
-		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		
-		System.out.println("bottom lane:");
-
-		System.out.println();
-		
-		// print bottom lane
-		tempStreet2 = spawn;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		tempStreet2 = ((Spawn)(tempStreet2)).next3;
-		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		while (tempStreet2.next1 != null && tempStreet2 != crossroad) {
-			tempStreet2 = tempStreet2.next1;
-			System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
-		}
-	}
-	
-	public static void printKStacks(KStack[] kstacks, int carSize, int kHeight) {
-		for (int i=0; i<kstacks.length; i++) {
-			System.out.println(i);
-			Street tempStreet1 = kstacks[i];
-			System.out.println(tempStreet1.prev1);
-			System.out.println(tempStreet1);
-			for (int j=0; j<carSize*kHeight-1; j++) {
-				tempStreet1 = tempStreet1.next1;
-				System.out.println(tempStreet1);
-			}
-			System.out.println();
-			System.out.println();
-		}
+	private static void evaluateResults() {
+		; // TODO
 	}
 }
