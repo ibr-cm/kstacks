@@ -56,9 +56,9 @@ public class Street {
 	 * @param tick current time in ticks
 	 */
 	public void refresh(int tick) {
-		if (this.lastRefresh != tick) {
+//		if (this.lastRefresh != tick) {
 			this.carAtLastTick = this.car;
-			this.lastRefresh = tick;
-		}
+//			this.lastRefresh = tick;
+//		}
 	}
 }

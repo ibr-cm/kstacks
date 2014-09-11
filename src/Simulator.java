@@ -15,70 +15,131 @@ import javax.imageio.stream.ImageOutputStream;
 
 public class Simulator {
 	
+	/**
+	 * Ticks the simulator is using to calculate discrete time intervals.
+	 */
 	private int tick;
+	
+	/**
+	 * Spawn and Despawn where cars enter and leave the parking lot.
+	 */
 	private Spawn spawn;
 	private Despawn despawn;
+	
+	/**
+	 * The crossroad is a special piece of street near the despawn. It has
+	 * three streets leading to it. So it has three references to them.
+	 */
 	private Crossroad crossroad;
+	
+	/**
+	 * List of KStack which can be used.
+	 */
 	private KStack[] kstack;
+	
+	/**
+	 * List of all events, which will be used in the process of simulation.
+	 * Each of them has a reference to a car and a time when this car enters
+	 * and leaves the parking lot. When all events are fulfilled the simulation
+	 * is complete.
+	 */
 	private EventItem[] eventList;
-	private EventItem[] spawnList; // just in case you want to spawn cars fast behind each other
+	
+	/**
+	 * The spawn list a linked list which has all the spawns which are supposed
+	 * to happen. This ensures that a certain priority. 
+	 */
+	private SpawnEvent spawnList;
+	
+	/**
+	 * This is a list that holds all the unparking processes.
+	 */
 	private UnparkEvent unparkingList;
-	private Car[] carList;
-	private int totalCarsUsed;
+	
+	/**
+	 * This is a list of streets are will be used in the next ticks of
+	 * simulation. This ensures that the unparking order follows the order in
+	 * which unparking oders came in. It is only used when the boolean
+	 * chaoticUnparking is set to false.
+	 * Every KStack writes all the streets it needs for the current unparking
+	 * event to this list. When it detects that a street it needs is already on
+	 * the stack it cannot unpark. Also only if chaoticUnparking is set to
+	 * false. 
+	 */
+	private Street[] usedByKStacks;
+	
+	/**
+	 * If this boolean is set to true every KStack can unpark at anytime given
+	 * the space is free. The simulator does care for the order unparking
+	 * orders came in. As soon the space is free the KStack will unpark. This
+	 * can lead to heavy delays for individual unparking events but might
+	 * increase mean performance.
+	 * If it is set to false the simulator will follow the order in which cars
+	 * parked and makes unparking events with lower priority wait.
+	 */
+	private boolean chaoticUnparking;
+	
+	
 	private int kHeight;
 	private int carSize;
 	private int parkingRows;
 	private boolean debug;
-	private boolean visualOutput;
+	private int visualOutput;
 	private int verboseLevel;
 	
-	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, Car[] carList, EventItem[] eventList, int totalCarsUsed, int kHeight, int carSize, int parkingRows) {
+	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, int kHeight, int carSize, int parkingRows) {
 		this.tick = 0;
 		this.spawn = spawn;
 		this.despawn = despawn;
 		this.crossroad = crossroad;
 		this.kstack = kstack;
 		this.eventList = eventList;
-		this.carList = carList;
-		this.totalCarsUsed = totalCarsUsed;
 		this.kHeight = kHeight;
 		this.carSize = carSize;
 		this.parkingRows = parkingRows;
-		this.spawnList = new EventItem[totalCarsUsed];
-		for (int i=0; i<totalCarsUsed; i++) {
-			this.spawnList[i] = null;
-		}
 		this.unparkingList = new UnparkEvent();
 		this.unparkingList.setHead();
-		this.visualOutput = false;
+		this.visualOutput = 0;
 		this.verboseLevel = 2;
+		this.spawnList = null;
 	}
 	
-	public void runSimulator(int maxTick, boolean debug, boolean visualOutput, int verboseLevel) {
+	/**
+	 * Heart of the simulator. This piece of code calculates the single steps.
+	 * @param maxTick Maximum of ticks the simulator is supposed to run. If
+	 * set to 0 the simulator runs until all items on the eventList are done.
+	 * @param debug If this boolean is set the simulator tries to put all cars
+	 * into kstack[0]. This is only useful when debuging.
+	 * @param visualOutput In case the user wishes to have visual output of the
+	 * state of the parking lot the value can be used to specify every how many
+	 * ticks the user wants to have output. The down-side is the performance
+	 * reduction when drawing is necessary. 0 means no output, 1 means every
+	 * tick, 2 means every other tick, ...
+	 * @param verboseLevel This specifies how much text output the simulator
+	 * preduces. 0 means no output, 1 means despawn events only, 2 means every-
+	 * thing the methods during the simulation process have to say.
+	 */
+	public void runSimulator(int maxTick, boolean debug, int visualOutput, int verboseLevel, boolean chaoticUnparking) {
 		
 		long time = System.currentTimeMillis();
 		
 		this.debug = debug;
-		
-		this.verboseLevel = Math.min(Math.max(0, verboseLevel),2);
-//		System.out.println(verboseLevel);
+		this.chaoticUnparking = chaoticUnparking;
+		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
 		this.visualOutput = visualOutput;
 
 		
 		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
 			
-			if (visualOutput) {
-				try {
-					generateImage(Integer.toString(tick)+"_0");
-				} catch (Exception e) {debugOutput(""+e,2);}
-			}
-			
+			if (tick == 1200)
+				System.out.println("1200");
 			
 			debugOutput("=============================================================",2);
-			debugOutput("Tick: "+tick,2);
+			debugOutput("Tick: "+tick,1);
 			debugOutput("=============================================================",2);
 			
-			checkForStreetBlocking();			
+			this.usedByKStacks = null;
+			checkForStreetBlocking();
 			
 			moveCars();
 			debugOutput("Moved Cars",2);
@@ -95,10 +156,13 @@ public class Simulator {
 			
 			checkForUnparkingEvents();
 			
-//			debugOutput("kstack 0 parking: "+kstack[0].lockedForParking+", unparking: "+kstack[0].lockedForUnparking,2);
-//			debugOutput("kstack 1 parking: "+kstack[1].lockedForParking+", unparking: "+kstack[1].lockedForUnparking,2);
-//			debugOutput("kstack 2 parking: "+kstack[2].lockedForParking+", unparking: "+kstack[2].lockedForUnparking,2);
-//			debugOutput("kstack 3 parking: "+kstack[3].lockedForParking+", unparking: "+kstack[3].lockedForUnparking,2);
+			// TODO ROUND ROBIN @ crossroad
+			
+			if (visualOutput != 0 && (tick%visualOutput)==0) {
+				try {
+					generateImage(Integer.toString(tick)+"_0");
+				} catch (Exception e) {debugOutput(""+e,2);}
+			}
 			
 			tick++;
 			debugOutput("=============================================================",2);
@@ -109,7 +173,7 @@ public class Simulator {
 	
 	
 	private boolean eventsFinished() {
-		for (int i=0; i<totalCarsUsed; i++) {
+		for (int i=0; i<eventList.length; i++) {
 			if (!eventList[i].isFulfilled())
 				return false;
 		}
@@ -140,53 +204,63 @@ public class Simulator {
 	
 	/**
 	 * This method checks for new cars, which should spawn now and puts them in
-	 * a queue for the spawn
+	 * a queue for the spawn. It also checks if too many cars are inside the
+	 * parking lot.
 	 */
 	private void checkForSpawns() {
-		for (int i=0; i<totalCarsUsed; i++) {
+		for (int i=0; i<eventList.length; i++) {
 			
 			// check if a car is supposed to spawn
 			if (eventList[i].getEntryTime() == tick) {
 				debugOutput("==========",2);
 				debugOutput("checkForSpawns: Put a car on spawn list at "+this.tick+" tick(s).",2);
 				
-				// if all kstacks are full the spawn gets cancelled, the event is considered fulfilled
-				// cars which did not fit into the parkingLot can be recognized because their exit time stamp
-				// is earlier than the entry time stamp.
+				// adds up the content of all kstacks
 				int carsInStacks = 0;
 				for (int j=0; j<kstack.length; j++) {
 					carsInStacks += kstack[j].watermark;
 				}
+				// If the parking lot is full the cars event is fulfilled but
+				// with a tick count of "right now" minus 1. This ensures that
+				// it is obvious which cars never entered the parking lot.
 				if (carsInStacks == kstack.length*kHeight) {
 					eventList[i].fulfill(tick-1);
 					debugOutput("checkForSpawn: a car tried to spawn but parkingLot is full",2);
 					debugOutput("checkForSpawn: event: "+eventList[i],2);
 					debugOutput("checkForSpawn: entryTime: "+eventList[i].getEntryTime()+", backOrderTime: "+eventList[i].getBackOrderTime()+", exitTime"+eventList[i].getExitTime(),2);
-					return;
+				} else {
+					// If there is enough space the spawning of this car will
+					// be appended to the list of spawns.
+					if (spawnList == null) {
+						spawnList = new SpawnEvent(eventList[i]);
+					} else {
+						spawnList.addNewEvent(spawnList, eventList[i]);
+					}
+//					int j = 0;
+//					while (spawnList[j] != null) {
+//						j++;
+//					}
+//					spawnList[j] = eventList[i];
+					debugOutput("==========",2);
 				}
-				
-				// the spawning of this car will be appended to the list of spawns
-				int j = 0;
-				while (spawnList[j] != null) {
-					j++;
-				}
-				spawnList[j] = eventList[i];
-				debugOutput("==========",2);
 			}
 		}
 	}
 	
 	
-	// spawns the next car in the queue (in case there is one)
+	
+	/**
+	 * This method spawns the next car in the queue in case the spawn is free.
+	 * The kstack the car should go is also determined right before spawning.
+	 */
 	private void spawnCar() {
-		if (spawnList[0] != null) {
+		if (spawnList != null) {
 			debugOutput("==========",2);
 			debugOutput("spawnCar: Car is on spawn list.",2);
 			
 			// check if spawn is free -- possible cases
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
-			// kstack of spawning car is not accessible (because it is unparking)
 			boolean spawnBlocked = false;
 			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || (kHeight*carSize>2?spawn.prev1.car != null:false)) {
 				debugOutput("spawnCar: Cannot spawn since spawn is blocked!",2);
@@ -195,27 +269,29 @@ public class Simulator {
 			
 			debugOutput("spawnCar: Spawn was "+(spawnBlocked?"":"not ")+"blocked.",2);
 			
+			// if the spawn is not blocked the will be spawned
 			if (!spawnBlocked) {
-				
 				// index of the stack with the smallest amount of cars
 				// the boolean is for debug purposes -- if set to TRUE the
 				// simulator tries to stack all into kstack[0]
 				int index = findSmallestStack(this.debug);
 				debugOutput("spawnCar: Car was put on stack "+index+" ("+this.kstack[index]+").",2);
 				
-				// assign kstack to a car
-				spawnList[0].getCar().kstack = kstack[index];
+				EventItem tempEventItem = spawnList.eventItem;
+				
+				// assign the right lane to a car
+				tempEventItem.getCar().kstack = kstack[index];
 				if (index/(kstack.length/3)==0) {
-					spawnList[0].getCar().lane = spawn.next1;
+					tempEventItem.getCar().lane = spawn.next1;
 				} else if (index/(kstack.length/3)==1) {
-					spawnList[0].getCar().lane = spawn.next2;
+					tempEventItem.getCar().lane = spawn.next2;
 				} else {
-					spawnList[0].getCar().lane = spawn.next3;
+					tempEventItem.getCar().lane = spawn.next3;
 				}
 				
 				// assign parkingSpot to the car
-				debugOutput("spawnCar: assigned parking spot: "+spawnList[0].getCar().parkingSpot,2);
-				spawnList[0].getCar().parkingSpot = kstack[index].watermark;
+				debugOutput("spawnCar: assigned parking spot: "+tempEventItem.getCar().parkingSpot,2);
+				tempEventItem.getCar().parkingSpot = kstack[index].watermark;
 				
 				// increment the cars stored in this kstack
 				kstack[index].watermark++;
@@ -223,35 +299,26 @@ public class Simulator {
 								
 				
 				// put the car down at the spawn
-				spawnList[0].getCar().spawn();
+				tempEventItem.getCar().spawn();
 				
 				// setup driving target, which is essential the final parking position
-				Street tempStreet1 = spawnList[0].getCar().kstack;
+				Street tempStreet1 = tempEventItem.getCar().kstack;
 				
 				// the kstack is locked for unparking but not for parking 
-				spawnList[0].getCar().kstack.lockedForUnparking = true;
+				tempEventItem.getCar().kstack.lockedForUnparking = true;
+				tempEventItem.getCar().kstack.lockedForParking = true;
 //				debugOutput("spawnCar: carSize "+carSize);
-				debugOutput("spawnCar: watermark of "+tempStreet1+" is "+spawnList[0].getCar().parkingSpot+" and lockedForUnparking is "+spawnList[0].getCar().kstack.lockedForUnparking,2);
+				debugOutput("spawnCar: watermark of "+tempStreet1+" is "+tempEventItem.getCar().parkingSpot+" and lockedForUnparking is "+tempEventItem.getCar().kstack.lockedForUnparking,2);
 				// fin the right spot where to park exactly
-				tempStreet1 = getParkingSpot(spawnList[0].getCar());
+				tempStreet1 = getParkingSpot(tempEventItem.getCar());
 				
 				debugOutput("spawnCar: Final parking position: "+tempStreet1,2);
 				DrivingTarget[] targets = new DrivingTarget[1];
-				targets[0] = new DrivingTarget(tempStreet1, 'D', spawnList[0].getCar().kstack, null, false, unparkingList, null, false);
-				spawnList[0].getCar().setDrivingTargets(targets);
+				targets[0] = new DrivingTarget(tempStreet1, 'D', tempEventItem.getCar().kstack, tempEventItem.getCar().kstack, false, unparkingList, null, false);
+				tempEventItem.getCar().setDrivingTargets(targets);
 				
-				// shift the whole list one item down
-				for (int i=0; i<totalCarsUsed-1; i++) {
-					spawnList[i] = spawnList[i+1];
-				}
-				spawnList[totalCarsUsed-1] = null;
-				
-				if (spawnList[0] == null) {
-					debugOutput("spawnCar: Spawn list is now empty.",2);
-				} else {
-					debugOutput("spawnCar: New latest item on spawn list is "+spawnList[0],2);
-				}
-				
+				// remove recently spawned car from spawnList
+				spawnList = spawnList.next;
 			}
 			debugOutput("==========",2);
 		}
@@ -283,22 +350,25 @@ public class Simulator {
 	 * the state of the driving targets. If the car has none it will not move.
 	 */
 	private void moveCars() {
-		for (int i=0; i<carList.length; i++) {
-			if (carList[i].isInParkingLot()) {
+		for (int i=0; i<eventList.length; i++) {
+			if (eventList[i].getCar().isInParkingLot()) {
 				debugOutput("==========",2);
-				debugOutput("Trying to move car "+carList[i],2);
-				carList[i].drive();
+				debugOutput("Trying to move car "+eventList[i].getCar(),2);
+				eventList[i].getCar().drive();
 				debugOutput("==========",2);
 			}
 		}
 	}
 	
-	
+	/**
+	 * Queues a new unparking process into the queue and sets new locks for
+	 * unparking and parking. 
+	 */
 	private void checkForUnparkingEvents() {
 		// Create a new UnparkEvent for every car that wants to unpark.
-		for (int i=0; i<totalCarsUsed; i++) {
+		for (int i=0; i<eventList.length; i++) {
 			if (eventList[i].getBackOrderTime() + eventList[i].getBackOrderDelay() == tick) {
-				if (eventList[i].getCar().kstack.lockedForUnparking) {
+				if (eventList[i].getCar().kstack.lockedForUnparking || eventList[i].getCar().drivingTarget != null) {
 					debugOutput("==========",2);
 					eventList[i].increaseBackOrderDelay();
 					debugOutput("checkForUnparkingEvents: was delayed because the kstack was locked",2);
@@ -308,7 +378,6 @@ public class Simulator {
 					debugOutput("scheduleUnparking: Creating an unparking Event at "+this.tick+" tick(s).",2);
 					UnparkEvent newUnparkEvent = new UnparkEvent();
 					newUnparkEvent.setCarToUnpark(eventList[i].getCar()); // Car that wants to leave its spot.
-					newUnparkEvent.getKStack().watermark--;
 					newUnparkEvent.getKStack().lockedForParking = true;
 					newUnparkEvent.getKStack().lockedForUnparking = true;
 					
@@ -340,6 +409,7 @@ public class Simulator {
 						DrivingTarget[] tempTarget1 = new DrivingTarget[2];
 						// drive to the right position 
 						tempTarget1[0] = new DrivingTarget(newUnparkEvent.getCarToUnpark().kstack.prev1, 'R', newUnparkEvent.getKStack(), newUnparkEvent.getKStack(), true, unparkingList, newUnparkEvent, false);
+						tempTarget1[0].reduceWatermark = true;
 						tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null, false);
 						
 						eventList[i].getCar().drivingTarget = tempTarget1;
@@ -358,7 +428,7 @@ public class Simulator {
 						Car tempCar1 = eventList[i].getCar();
 						newUnparkEvent.carsInTheWay = 0;
 						
-						while (tempStreet1.car != null) {
+l4:						while (tempStreet1.car != null) {
 							debugOutput("checkForUnparkingEvents: tempStreet1.car = "+tempStreet1.car,2);
 							if (tempStreet1.car != null && tempStreet1.car != tempCar1) {
 								newUnparkEvent.carsInTheWay++;
@@ -378,8 +448,12 @@ public class Simulator {
 								tempCar1.drivingTarget = tempDrivingTarget;
 								
 							}
+							if (tempStreet1 == tempCar1.kstack || tempStreet1.car == null)
+								break l4;
 							tempStreet1 = tempStreet1.prev1;
 						}
+						debugOutput("checkForUnparkingEvents: cars in the way = "+newUnparkEvent.carsInTheWay,2);
+						newUnparkEvent.firstInQueue.drivingTarget[0].reduceWatermark = true;
 						newUnparkEvent.firstInQueue.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.getKStack();
 						newUnparkEvent.firstInQueue.drivingTarget[2].continousUnblocking = true;
 					}
@@ -396,7 +470,13 @@ public class Simulator {
 					
 					
 		
-	
+	/**
+	 * This method finds the right spot a car has to reach to let the car,
+	 * which wants to unpark, out of the kstack. 
+	 * @param spot How far away from the kstack does the car have to park?
+	 * @param kstack What kstack is this all about?
+	 * @return The street the car has to reach as the currentStreet.
+	 */
 	private Street unparkingSpot(int spot, Street kstack) {
 		Street tempStreet1 = kstack.prev1;
 		for (int i = 0; i < spot*carSize; i++) {
@@ -406,6 +486,15 @@ public class Simulator {
 	}
 	
 	
+	/**
+	 * This method checks if there is an unparkEvent on the list, which has
+	 * cars that are ready to enter the street. And if so it checks if there
+	 * is enough space to proceed with the unparking event.
+	 * If the cars are piled up next to the street but there is something in
+	 * the way so unparking is impossible this method disables the car, which
+	 * is first in the queue of unparking cars. This way they cannot
+	 * accidentally enter the street.
+	 */
 	private void checkForStreetBlocking() {
 		UnparkEvent tempUnparkEvent1 = unparkingList;
 		while (tempUnparkEvent1.next != null) {
@@ -422,15 +511,24 @@ public class Simulator {
 				boolean spaceIsFree = true;
 				debugOutput("checkForStreetBlocking: checking  for space "+((tempUnparkEvent1.carsInTheWay+1)*this.carSize),2);
 				for (int i = 0; i < (tempUnparkEvent1.carsInTheWay+1)*this.carSize; i++) {
-					if (tempStreet1.car != null || tempStreet1.blockingKStack != null) {
+					if (!this.chaoticUnparking) {
+						if (isStreetAlreadyUsedByKStack(tempStreet1)) {
+							spaceIsFree = false;
+						} else {
+							addStreetToUsedByKStacks(tempStreet1);
+						}
+					}
+					if (spaceIsFree && (tempStreet1.car != null || tempStreet1.blockingKStack != null)) {
 						spaceIsFree = false;
 					}
 					tempStreet1 = tempStreet1.prev1;
 				}
+				
+				
 				debugOutput("checkForStreetBlocking: spaceIsFree? "+spaceIsFree,2);
 				
 				// If not the street can be blocked.
-				if (spaceIsFree) { // && tempUnparkEvent1.carsInTheWay == 0) {
+				if (spaceIsFree) {
 					blockStreets(tempUnparkEvent1.getKStack(), ((tempUnparkEvent1.carsInTheWay+1)*this.carSize));
 					tempUnparkEvent1.doneBlocking = true;
 					tempUnparkEvent1.firstInQueue.disabled = false;
@@ -444,13 +542,17 @@ public class Simulator {
 	}
 		
 	
-	// Blocking a certain amount of tiles
+	/**
+	 * Blocking a certain amount of tiles beginning at a certain KStack.
+	 * @param kstack KStack which is the starting point.
+	 * @param length Number of tiles that are needed to be blocked.
+	 */
 	public void blockStreets(KStack kstack, int length) {
 		debugOutput("==========",2);
 		debugOutput("blockStreets: kStack: "+kstack+", length: "+length,2);
-		Street tempStreet1 = kstack.prev1;
+		Street tempStreet1 = kstack.prev1; // Street right before the KStack
 		for (int i = 0; i < length; i++) {
-			tempStreet1.blockingKStack = kstack;
+			tempStreet1.blockingKStack = kstack; // block every street with the right KStack
 			tempStreet1 = tempStreet1.prev1;
 		}
 		debugOutput("==========",2);
@@ -458,26 +560,34 @@ public class Simulator {
 
 	
 	
-	
+	/**
+	 * This method runs a refresh on all streets. Streets store the car
+	 * standing on it right now in carAtLastTick. So there is a way to find out
+	 * whether or not there was a car standing here during the last tick. So
+	 * cars always leave one tile free inbetween each other while driving.
+	 * Since the actual tick is also given to the street there is no way this
+	 * can accidentally happen twice to a street during one tick.
+	 */
 	private void refreshStreets() {
+		/* middle lane from first piece of street all the way to the despawn */
 		Street tempStreet1 = spawn;
-		while (tempStreet1.prev1 != null) {
+		while (tempStreet1.prev1 != null) { // find the first piece of street
 			tempStreet1 = tempStreet1.prev1;
 		}
 		tempStreet1.refresh(this.tick);
 		while (tempStreet1.next1 != null) {
+			tempStreet1 = tempStreet1.next1; // go to despawn
+			tempStreet1.refresh(this.tick);
+		}
+		tempStreet1 = spawn.next2; // do the same for the second lane
+		tempStreet1.refresh(this.tick);
+		while (tempStreet1.next1 != crossroad) {
 			tempStreet1 = tempStreet1.next1;
 			tempStreet1.refresh(this.tick);
 		}
-		tempStreet1 = spawn.next2;
+		tempStreet1 = spawn.next3; // do the same for the third lane
 		tempStreet1.refresh(this.tick);
-		while (tempStreet1.next1 != null) {
-			tempStreet1 = tempStreet1.next1;
-			tempStreet1.refresh(this.tick);
-		}
-		tempStreet1 = spawn.next3;
-		tempStreet1.refresh(this.tick);
-		while (tempStreet1.next1 != null) {
+		while (tempStreet1.next1 != crossroad) {
 			tempStreet1 = tempStreet1.next1;
 			tempStreet1.refresh(this.tick);
 		}
@@ -488,13 +598,47 @@ public class Simulator {
 	 * moving) compared to the last tick. This will be also saved.
 	 */
 	private void checkForStartsStops() {
-		for (int i = 0; i < carList.length; i++)
-			carList[i].checkForStartsStops();
+		for (int i = 0; i < eventList.length; i++)
+			eventList[i].getCar().checkForStartsStops();
 	}
 	
 	
+	private void addStreetToUsedByKStacks(Street street) {
+		// if the list is empty this fills it with one item
+		if (this.usedByKStacks == null) {
+			this.usedByKStacks = new Street[1];
+			this.usedByKStacks[0] = street;
+		} else {
+			// first it has to check whether that street is existing in the list
+			// this is actually optional since duplicates in the list do not matter
+//			boolean isInList = false;
+//l6:			for (int i = 0; i < this.usedByKStacks.length; i++) {
+//				if (this.usedByKStacks[i]==street) {
+//					isInList = true;
+//					break l6;
+//				}
+//			}
+			// if item is not in the list it gets added
+//			if (!isInList) {			
+				Street tempStreet1[] = new Street[this.usedByKStacks.length+1];
+				for (int i = 0; i < this.usedByKStacks.length; i++) {
+					tempStreet1[i] = this.usedByKStacks[i];
+				}
+				tempStreet1[tempStreet1.length-1] = street;
+				this.usedByKStacks = tempStreet1;
+//			}
+		}
+	}
 	
-	
+	private boolean isStreetAlreadyUsedByKStack(Street street) {
+		if (this.usedByKStacks != null) {
+			for (int i = 0; i < this.usedByKStacks.length; i++) {
+				if (this.usedByKStacks[i] == street)
+					return true;
+			}
+		}
+		return false;
+	}
 	
 	
 	
@@ -662,10 +806,14 @@ public class Simulator {
 		debugOutput("Entry Time: "+stats[0],1);
 		debugOutput("Entry Delay: "+stats[1],1);
 		debugOutput("BackOrder Time: "+stats[2],1);
-		debugOutput("BackOrder Delay: "+stats[3],1);
+		if (verboseLevel == -1)
+			System.out.println(stats[4]-stats[2]);
+		else
+			debugOutput("BackOrder Delay: "+stats[3],1);
 		debugOutput("Exit Time: "+stats[4],1);
 		debugOutput("Moved Tiles: "+item.getCar().tilesMoved,1);
 		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
+		debugOutput("Watermark: "+item.getCar().kstack.watermark,1);
 		debugOutput("==========",1);
 	}
 	
@@ -674,7 +822,7 @@ public class Simulator {
 		int x =0, y = 0, PIX_SIZE = 15;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
 		Graphics2D g=(Graphics2D)bi.getGraphics();
-		String filename =  "tick_"+tick+ "_img.jpg";
+		String filename =  "tick_"+tick+ "_img.png";
 		
 		// paint everything white
 		for( int i = 0; i < X; i++ ){
@@ -725,7 +873,7 @@ public class Simulator {
 		}
 		for (int i = 0; i < parkingRows+2+kHeight*carSize+carSize; i++) {
 			if (tempStreet1.car != null) {
-				g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+				g.setColor(tempStreet1.car.color);
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -741,7 +889,7 @@ public class Simulator {
 		Street tempStreet2 = spawn.next3;
 		for (int i = 1; i < 2*kHeight*carSize+2; i++) {
 			if (tempStreet1.car != null) {
-				g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+				g.setColor(tempStreet1.car.color);
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -749,7 +897,7 @@ public class Simulator {
 			g.fillRect(carSize*kHeight*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				g.setColor(new Color(0, tempStreet2.car.color[1], tempStreet2.car.color[2]));
+				g.setColor(tempStreet2.car.color);
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -763,8 +911,7 @@ public class Simulator {
 		// use the position of the streets and keep painting upper and lower horizontal streets
 		for (int i = 0; i < parkingRows; i++) {
 			if (tempStreet1.car != null) {
-				Color tempColor = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
-				g.setColor(tempColor);
+				g.setColor(tempStreet1.car.color);
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -772,7 +919,7 @@ public class Simulator {
 			g.fillRect((carSize*kHeight+1+i)*PIX_SIZE, (((Y/2))-2*carSize*kHeight-1)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				g.setColor(new Color(0, tempStreet2.car.color[1], tempStreet2.car.color[2]));
+				g.setColor(tempStreet2.car.color);
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -786,7 +933,7 @@ public class Simulator {
 		// and now the right vertical streets
 		for (int i = 2*kHeight*carSize+1; i > 0; i--) {
 			if (tempStreet1.car != null) {
-				g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+				g.setColor(tempStreet1.car.color);
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -794,8 +941,7 @@ public class Simulator {
 			g.fillRect((carSize*kHeight+parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				Color tempColor = new Color(0, tempStreet2.car.color[1], tempStreet2.car.color[2]);
-				g.setColor(tempColor);
+				g.setColor(tempStreet2.car.color);
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -824,7 +970,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -838,7 +984,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -868,7 +1014,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -882,7 +1028,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -912,7 +1058,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]));
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -926,8 +1072,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							Color tempColor1 = new Color(0, tempStreet1.car.color[1], tempStreet1.car.color[2]);
-							g.setColor(tempColor1);
+							g.setColor(tempStreet1.car.color);
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -957,7 +1102,7 @@ l2:			while (tempStreet1 != crossroad) {
 	private void saveToFile( BufferedImage img, File file ) throws IOException {
 		ImageWriter writer = null;
 		@SuppressWarnings("rawtypes")
-		java.util.Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
+		java.util.Iterator iter = ImageIO.getImageWritersByFormatName("png");
 		if( iter.hasNext() ){
 		    writer = (ImageWriter)iter.next();
 		}

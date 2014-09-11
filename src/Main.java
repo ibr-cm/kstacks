@@ -1,9 +1,8 @@
 public class Main {
 	public static void main(String args[]) {
-		
-		int parkingRows = 2;
-		int carSize = 3;
-		int kHeight = 3;
+		int parkingRows = 30;
+		int carSize = 1;
+		int kHeight = 4;
 		
 		
 		
@@ -109,7 +108,7 @@ public class Main {
 		
 		// create kstacks
 		for (int i=0; i<parkingRows*6; i++) {
-			kstacks[i] = new KStack();
+			kstacks[i] = new KStack(i);
 		}
 		
 		
@@ -183,8 +182,9 @@ public class Main {
 		//printKStacks(kstacks, carSize, kHeight);
 		
 		
-		int totalCarsUsed = 31;
-		int verboseLevel = 0;
+		int totalCarsUsed = 480;
+		int verboseLevel = -1, visualOutput = 1, maxTicks = 0;
+		boolean debugKStack0 = false, chaoticUnparking = true;
 		Car[] carList = new Car[totalCarsUsed];
 		EventItem[] eventList = new EventItem[totalCarsUsed];
 		
@@ -194,67 +194,14 @@ public class Main {
 		}
 		
 		for (int i = 0; i < totalCarsUsed; i++) {
-			eventList[i].setupEvent(carList[i], i*10, 100+i*15);
+			//eventList[i].setupEvent(carList[i], i*7, i*7+40);
+			//eventList[i].setupEvent(carList[i], i*10+(int)(Math.random()*2), i*5+1200+(int)(Math.random()*350));
+			eventList[i].setupEvent(carList[i], 0, 1200);
 		}
 		
-//		eventList[0].setupEvent(carList[0], 0, 120);
-//		eventList[1].setupEvent(carList[1], 5, 135);
-//		eventList[2].setupEvent(carList[2], 10, 150);
-//		eventList[3].setupEvent(carList[3], 15, 165);
-//		eventList[4].setupEvent(carList[4], 20, 180);
-//		eventList[5].setupEvent(carList[5], 25, 195);
-//		eventList[6].setupEvent(carList[6], 30, 210);
-//		eventList[7].setupEvent(carList[7], 35, 225);
-//		eventList[8].setupEvent(carList[8], 40, 240);
-//		eventList[9].setupEvent(carList[9], 45, 255);
-//		eventList[10].setupEvent(carList[10], 50, 270);
-//		eventList[11].setupEvent(carList[11], 55, 285);
-//		eventList[12].setupEvent(carList[12], 60, 200);
-//		eventList[13].setupEvent(carList[13], 65, 315);
-//		eventList[14].setupEvent(carList[14], 70, 330);
-//		eventList[15].setupEvent(carList[15], 75, 345);
-//		eventList[16].setupEvent(carList[16], 80, 360);
-//		eventList[17].setupEvent(carList[17], 85, 375);
-//		eventList[18].setupEvent(carList[18], 90, 390);
-//		eventList[19].setupEvent(carList[19], 95, 420);
-//		eventList[20].setupEvent(carList[20], 100, 430);
-//		eventList[21].setupEvent(carList[21], 105, 440);
-//		eventList[22].setupEvent(carList[22], 110, 450);
-//		eventList[23].setupEvent(carList[23], 115, 460);
-//		eventList[24].setupEvent(carList[24], 120, 470);
-//		eventList[25].setupEvent(carList[25], 125, 480);
-//		eventList[26].setupEvent(carList[26], 130, 490);
-//		eventList[27].setupEvent(carList[27], 135, 500);
-//		eventList[28].setupEvent(carList[28], 140, 510);
-//		eventList[29].setupEvent(carList[29], 145, 520);
-//		eventList[30].setupEvent(carList[30], 150, 521);
-//		eventList[10].setupEvent(carList[4], 19, 37);
-//		eventList[11].setupEvent(carList[5], 5, 34);
-//		eventList[12].setupEvent(carList[6], 34, 65);
-//		eventList[13].setupEvent(carList[1], 17, 21);
-//		eventList[14].setupEvent(carList[2], 27, 60);
-//		eventList[15].setupEvent(carList[3], 13, 39);
-//		eventList[16].setupEvent(carList[4], 29, 67);
-//		eventList[17].setupEvent(carList[5], 30, 75);
-//		eventList[18].setupEvent(carList[6], 15, 45);
-//		eventList[19].setupEvent(carList[1], 6, 26);
-//		eventList[20].setupEvent(carList[2], 3, 58);
-//		eventList[21].setupEvent(carList[3], 17, 60);
-//		eventList[22].setupEvent(carList[4], 22, 67);
-//		eventList[23].setupEvent(carList[5], 16, 65);
-//		eventList[24].setupEvent(carList[6], 31, 85);
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows);
 		
-		
-		
-		
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);
-		
-		
-		// arg[0]: maximum ticks to run (0: max ticks disabled)
-		// arg[1]: true: all cars go to kstack[0] -- false: cars get evenly distributed
-		// arg[2]: visual output enable
-		// arg[3]: cli verbose level -- 0: nothing -- 1: despawn events only -- 2: all
-		simulator.runSimulator(0, false, true, verboseLevel);
+		simulator.runSimulator(maxTicks, debugKStack0, visualOutput, verboseLevel, chaoticUnparking);
 		
 		
 		

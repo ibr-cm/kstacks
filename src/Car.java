@@ -1,3 +1,5 @@
+import java.awt.Color;
+
 
 public class Car {
 	public int exitTime;
@@ -36,27 +38,27 @@ public class Car {
 	
 	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
 	
-	public int[] color;
+//	public int[] color;
 	
 	public boolean disabled;
+	
+	public Color color;
 	
 	
 	
 	
 	public Car() {
-		this.color = new int[3];
-		this.color[0] = 0; // R
-		this.color[1] = (int)(Math.random()*256); // G
-		this.color[2] = (int)(Math.random()*256); // B
+		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
+//		this.color = new int[3];
+//		this.color[0] = 0; // R
+//		this.color[1] = (int)(Math.random()*256); // G
+//		this.color[2] = (int)(Math.random()*256); // B
 		this.verboseLevel = 0;
 		this.wasMoving = false;
 	}
 	
 	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, int verboseLevel) {
-		color = new int[3];
-		color[0] = 0;
-		color[1] = (int)(Math.random()*256);
-		color[2] = (int)(Math.random()*256);
+		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
 		this.size = size;
 		this.kstack = null;
 		this.currentStreet = null;
@@ -77,6 +79,10 @@ public class Car {
 	}
 	
 	public void spawn() {
+		float hue = (this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
+		hue -= (int)hue;
+		hue = hue*0.8f+0.1f;
+		this.color = Color.getHSBColor(hue, 1.0f, (float)(0.5*Math.random()+0.5));
 		this.currentStreet = spawn;
 		spawn.car = this;
 		Street tempStreet1 = spawn;
@@ -212,11 +218,13 @@ public class Car {
 				}
 				
 				// if the car is supposed to delete a UnparkEvent from the list of events
-				if (this.drivingTarget[0].unparkEvent != null) {
+				if (this.drivingTarget[0].unparkEvent != null)
 					this.drivingTarget[0].unparkEvent.pop(this.drivingTarget[0].unparkList);
-				}
 				
 				
+				// if this car is supposed to reduce the watermark when reaching this position
+				if (this.drivingTarget[0].reduceWatermark)
+					this.kstack.watermark--;
 				
 				
 				// now reduce the list of driving target by 1

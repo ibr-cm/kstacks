@@ -8,6 +8,8 @@ public class DrivingTarget {
 	public boolean continousUnblocking;
 	public UnparkEvent unparkList;
 	public UnparkEvent unparkEvent;
+	public boolean reduceWatermark;
+	
 	public DrivingTarget() {
 		this.street = null;
 		this.direction = 'N';
@@ -17,6 +19,7 @@ public class DrivingTarget {
 		this.continousUnblocking = false;
 		this.unparkList = null;
 		this.unparkEvent = null;
+		this.reduceWatermark = false;
 	}
 	public DrivingTarget(Street street, char direction, KStack kstackForUnparking, KStack kstackForParking, boolean releaseStreetBlock, UnparkEvent unparkingList, UnparkEvent unparkEvent, boolean continousUnblocking) {
 		this.street = street;
@@ -27,5 +30,7 @@ public class DrivingTarget {
 		this.continousUnblocking = continousUnblocking;
 		this.unparkList = unparkingList;
 		this.unparkEvent = unparkEvent;
+		this.reduceWatermark = false;
 	}
+	
 }
