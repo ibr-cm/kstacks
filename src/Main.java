@@ -30,57 +30,80 @@ public class Main {
 		// setting up the entire map
 		setupMap();
 
+		EventItem[] eventList;
+		boolean CSVinsteadofLoop = true;
 		
 		
-		
-		// instance of the csv parser
-		CSV csv = CSV
-			    .separator(',')  // delimiter of fields
-			    .quote('"')      // quote character
-			    .create();       // new instance is immutable
-		
-		// evaluate the number of lines inside the file to calculate the number
-		// of Cars and EventItem needed for the simulation
-		csv.read("test.csv", new CSVReadProc() {
-		    public void procRow(int rowIndex, String... values) {
-		    	totalCarsUsed = rowIndex+1;
-		    }
-		});
-		
-		// create to arrays with the values of every car
-		entryTime = new int[totalCarsUsed];
-		exitTime = new int[totalCarsUsed];
-		
-		// fill the arrays with data concerning the entry and exit tick
-		csv.read("test.csv", new CSVReadProc() {
-		    public void procRow(int rowIndex, String... values) {
-		        entryTime[rowIndex] = Integer.valueOf(values[0]);
-		        exitTime[rowIndex] = Integer.valueOf(values[1]);
-//		        System.out.println(values[1]);
-		    }
-		});
-		
-		
-		Car[] carList = new Car[totalCarsUsed];
-		EventItem[] eventList = new EventItem[totalCarsUsed];
-		
-		// creating the number of cars and events needed
-		for (int i=0; i<totalCarsUsed; i++) {
-			eventList[i] = new EventItem();
-			carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, verboseLevel);
+			if (CSVinsteadofLoop) {
+			// instance of the csv parser
+			CSV csv = CSV
+				    .separator(',')  // delimiter of fields
+				    .quote('"')      // quote character
+				    .create();       // new instance is immutable
+			
+			// evaluate the number of lines inside the file to calculate the number
+			// of Cars and EventItem needed for the simulation
+			csv.read("test.csv", new CSVReadProc() {
+			    public void procRow(int rowIndex, String... values) {
+			    	totalCarsUsed = rowIndex+1;
+			    }
+			});
+			
+			// create to arrays with the values of every car
+			entryTime = new int[totalCarsUsed];
+			exitTime = new int[totalCarsUsed];
+			
+			// fill the arrays with data concerning the entry and exit tick
+			csv.read("test.csv", new CSVReadProc() {
+			    public void procRow(int rowIndex, String... values) {
+			        entryTime[rowIndex] = Integer.valueOf(values[0]);
+			        exitTime[rowIndex] = Integer.valueOf(values[1]);
+	//		        System.out.println(values[1]);
+			    }
+			});
+			
+			
+			Car[] carList = new Car[totalCarsUsed];
+			eventList = new EventItem[totalCarsUsed];
+			
+			// creating the number of cars and events needed
+			for (int i=0; i<totalCarsUsed; i++) {
+				eventList[i] = new EventItem();
+				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, verboseLevel);
+			}
+			
+			// fill data into the events
+			for (int i = 0; i < totalCarsUsed; i++) {
+				eventList[i].setupEvent(carList[i], entryTime[i], exitTime[i]);
+			}
+			
+		} else {
+			totalCarsUsed = 480;
+			Car[] carList = new Car[totalCarsUsed];
+			eventList = new EventItem[totalCarsUsed];
+			// creating the number of cars and events needed
+			for (int i=0; i<totalCarsUsed; i++) {
+				eventList[i] = new EventItem();
+				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, verboseLevel);
+			}
+			// fill data into the events
+			for (int i = 0; i < totalCarsUsed; i++) {
+				eventList[i].setupEvent(carList[i], 0, 1200+(int)(Math.random()*350));
+			}
 		}
 		
-		// fill data into the events
-		for (int i = 0; i < totalCarsUsed; i++) {
-			eventList[i].setupEvent(carList[i], entryTime[i], exitTime[i]);
-		}
+		
+		
 		
 		// create an instance of the simulator itself
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, carList, eventList, totalCarsUsed, kHeight, carSize, parkingRows);
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows);
 		
+		
+		boolean chaoticUnparking = true;
+		int imageEveryXTicks = 1;
 		
 		// run the simulator
-		simulator.runSimulator(0, false, true, verboseLevel);
+		simulator.runSimulator(0, false, imageEveryXTicks, verboseLevel, chaoticUnparking);
 		
 		// do some statistics
 		evaluateResults();

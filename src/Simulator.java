@@ -86,6 +86,7 @@ public class Simulator {
 	private boolean debug;
 	private int visualOutput;
 	private int verboseLevel;
+	private int crossroadRoundRobinState;
 	
 	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, int kHeight, int carSize, int parkingRows) {
 		this.tick = 0;
@@ -102,6 +103,7 @@ public class Simulator {
 		this.visualOutput = 0;
 		this.verboseLevel = 2;
 		this.spawnList = null;
+		this.crossroadRoundRobinState = 0;
 	}
 	
 	/**
@@ -141,6 +143,9 @@ public class Simulator {
 			this.usedByKStacks = null;
 			checkForStreetBlocking();
 			
+			checkForRoundRobinAtCrossroad();
+			// TODO ROUND ROBIN @ crossroad
+			
 			moveCars();
 			debugOutput("Moved Cars",2);
 			
@@ -155,8 +160,6 @@ public class Simulator {
 			spawnCar();
 			
 			checkForUnparkingEvents();
-			
-			// TODO ROUND ROBIN @ crossroad
 			
 			if (visualOutput != 0 && (tick%visualOutput)==0) {
 				try {
@@ -641,7 +644,24 @@ l4:						while (tempStreet1.car != null) {
 	}
 	
 	
-	
+	private void checkForRoundRobinAtCrossroad() {
+		Street list[] = {crossroad.prev1, crossroad.prev2, crossroad.prev3};
+		
+		//if there is a car on the crossroad the rules of this method do not apply
+		if (this.crossroad.car != null || (list[0].car == null && list[1].car == null && list[2].car == null))
+			return;
+		
+		if (list[crossroadRoundRobinState].car != null) {
+			list[crossroadRoundRobinState].car.disabled = false;
+			if (list[(crossroadRoundRobinState+1)%3].car != null)
+				list[(crossroadRoundRobinState+1)%3].car.disabled = true;
+			if (list[(crossroadRoundRobinState+2)%3].car != null)
+				list[(crossroadRoundRobinState+2)%3].car.disabled = true;
+		} else {
+			crossroadRoundRobinState = (crossroadRoundRobinState+1)%3;
+			checkForRoundRobinAtCrossroad();
+		}
+	}
 	
 	
 	
