@@ -127,14 +127,21 @@ public class Simulator {
 		
 		this.debug = debug;
 		this.chaoticUnparking = chaoticUnparking;
-		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
-		this.visualOutput = visualOutput;
+		this.verboseLevel = 0;//verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
+		this.visualOutput = 0;//visualOutput;
 
 		
 		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
 			
-			if (tick == 1200)
-				System.out.println("1200");
+			boolean renderImage = true;
+			
+			if(tick == 16650) {
+				this.visualOutput = 1;
+				this.verboseLevel = 2;
+			}
+			
+			if ((tick%1000)==0)
+				System.out.println(tick);
 			
 			debugOutput("=============================================================",2);
 			debugOutput("Tick: "+tick,1);
@@ -146,7 +153,7 @@ public class Simulator {
 			checkForRoundRobinAtCrossroad();
 			// TODO ROUND ROBIN @ crossroad
 			
-			moveCars();
+			renderImage = moveCars();
 			debugOutput("Moved Cars",2);
 			
 			checkForStartsStops();
@@ -157,14 +164,24 @@ public class Simulator {
 			
 			checkForSpawns();
 			
-			spawnCar();
+			if (!renderImage)
+				renderImage = spawnCar();
+			else
+				spawnCar();
 			
 			checkForUnparkingEvents();
 			
-			if (visualOutput != 0 && (tick%visualOutput)==0) {
+			boolean carsInLot = false;
+			for (int i = 0; i<eventList.length; i++)
+				if (eventList[i].getCar().isInParkingLot())
+					carsInLot = true;
+				
+			if (carsInLot && visualOutput != 0 && (tick%visualOutput)==0) {
 				try {
 					generateImage(Integer.toString(tick)+"_0");
 				} catch (Exception e) {debugOutput(""+e,2);}
+			} else {
+//				System.out.println("Image omitted");
 			}
 			
 			tick++;
@@ -256,7 +273,7 @@ public class Simulator {
 	 * This method spawns the next car in the queue in case the spawn is free.
 	 * The kstack the car should go is also determined right before spawning.
 	 */
-	private void spawnCar() {
+	private boolean spawnCar() {
 		if (spawnList != null) {
 			debugOutput("==========",2);
 			debugOutput("spawnCar: Car is on spawn list.",2);
@@ -324,7 +341,9 @@ public class Simulator {
 				spawnList = spawnList.next;
 			}
 			debugOutput("==========",2);
+			return true;
 		}
+		return false;
 	}
 	
 	/**
@@ -352,15 +371,20 @@ public class Simulator {
 	 * lot and if it is this method tries to initiate driving. This depends on
 	 * the state of the driving targets. If the car has none it will not move.
 	 */
-	private void moveCars() {
+	private boolean moveCars() {
+		boolean renderImage = false;
 		for (int i=0; i<eventList.length; i++) {
 			if (eventList[i].getCar().isInParkingLot()) {
 				debugOutput("==========",2);
 				debugOutput("Trying to move car "+eventList[i].getCar(),2);
-				eventList[i].getCar().drive();
+				if (!renderImage)
+					renderImage = eventList[i].getCar().drive();
+				else
+					eventList[i].getCar().drive();
 				debugOutput("==========",2);
 			}
 		}
+		return renderImage;
 	}
 	
 	/**

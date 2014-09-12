@@ -1,0 +1,1 @@
+rm *_img.png

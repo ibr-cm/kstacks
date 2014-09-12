@@ -103,9 +103,9 @@ public class Car {
 		this.drivingTarget = drivingTarget;
 	}
 	
-	public void drive() {
+	public boolean drive() {
 		if (disabled || this.drivingTarget == null)
-			return;
+			return false;
 		
 		
 		// if there are at least one more driving target the car tries to drive there
@@ -241,6 +241,7 @@ public class Car {
 				debugOutput("drive: drivingTarget now: "+drivingTarget,2);
 			}
 		}
+		return true;
 	}
 	
 	

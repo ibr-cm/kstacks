@@ -1,20 +1,25 @@
+import java.security.SecureRandom;
+
 import au.com.bytecode.opencsv.CSV;
 import au.com.bytecode.opencsv.CSVReadProc;
 
 
 public class Main {
 	
-	private static int totalCarsUsed, entryTime[], exitTime[], carSize, parkingRows, kHeight, verboseLevel;
+	private static int totalCarsUsed, carSize, parkingRows, kHeight, verboseLevel;
 	private static Spawn spawn;
 	private static Crossroad crossroad;
 	private static Despawn despawn;
 	private static KStack kstacks[];
 	
+	public static int[][] csvData;
+	public static int size;
+	
 	public static void main(String args[]) {
 		
-		parkingRows = 2;
-		carSize = 3;
-		kHeight = 3;
+		parkingRows = 105;
+		carSize = 2;
+		kHeight = 2;
 		
 		verboseLevel = 1;
 		
@@ -34,37 +39,90 @@ public class Main {
 		boolean CSVinsteadofLoop = true;
 		
 		
-			if (CSVinsteadofLoop) {
-			// instance of the csv parser
+		if (CSVinsteadofLoop) {
+			
+			
+			csvData = new int[3][1];
+			size = 0;
 			CSV csv = CSV
 				    .separator(',')  // delimiter of fields
 				    .quote('"')      // quote character
 				    .create();       // new instance is immutable
 			
-			// evaluate the number of lines inside the file to calculate the number
-			// of Cars and EventItem needed for the simulation
-			csv.read("test.csv", new CSVReadProc() {
+			csv.read("adjusted.csv", new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
-			    	totalCarsUsed = rowIndex+1;
+			    	size = rowIndex+1;
 			    }
 			});
-			
-			// create to arrays with the values of every car
-			entryTime = new int[totalCarsUsed];
-			exitTime = new int[totalCarsUsed];
-			
-			// fill the arrays with data concerning the entry and exit tick
-			csv.read("test.csv", new CSVReadProc() {
+			System.out.println(size);
+			csvData = new int[3][size];
+			csv.read("adjusted.csv", new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
-			        entryTime[rowIndex] = Integer.valueOf(values[0]);
-			        exitTime[rowIndex] = Integer.valueOf(values[1]);
-	//		        System.out.println(values[1]);
+			    	csvData[0][rowIndex] = Integer.valueOf(values[0]);
+			    	csvData[1][rowIndex] = Integer.valueOf(values[1]);
+			    	csvData[2][rowIndex] = Integer.valueOf(values[2]);
 			    }
 			});
+			int eventsSize = 0;
+			for (int i=0; i<size; i++) {
+				eventsSize += csvData[1][i];
+			}
 			
+			totalCarsUsed = eventsSize;
+			
+			int events[][] = new int[2][eventsSize];
+			for (int i = 0; i < eventsSize; i++) {
+				events[0][i] = 0;
+				events[1][i] = 0;
+			}
+			int eventsPos = 0;
+			ListEntry list = new ListEntry();
+			
+			for (int i = size-1; i >= 0; i--) {
+				if (csvData[1][i] != 0) {
+					list = new ListEntry();
+					
+					
+					
+					for (int j = i; j < size; j++) {
+						if (((csvData[0][i]+1000) <= csvData[0][j]) && (csvData[2][j] > 0)) {
+							for (int k = 0; k < csvData[2][j]; k++)
+								list.append(list, j);
+						}
+					}
+					if (list.size() != 0) {
+						float random = getRandomNumber();
+						int exitIndex = list.getListEntry((int)(random*(float)(list.size()))).index;
+						csvData[1][i]--;
+						csvData[2][exitIndex]--;
+						events[0][eventsPos] = csvData[0][i];
+						events[1][eventsPos] = csvData[0][exitIndex];
+						eventsPos++;
+						i++;
+					}
+				}
+			}
+			
+//			System.out.println(totalCarsUsed);
+			
+			totalCarsUsed = 0;
+			for (int i=0; i<eventsSize; i++) {
+				if (events[1][i] != 0)
+					totalCarsUsed++;
+			}
+			
+//			System.out.println(totalCarsUsed);
+			
+			for (int i = 0; i < totalCarsUsed; i++) {
+				System.out.print(events[0][i]+" ");
+				System.out.println(events[1][i]);
+			}
+			
+//			if (true)return;
 			
 			Car[] carList = new Car[totalCarsUsed];
 			eventList = new EventItem[totalCarsUsed];
+			
 			
 			// creating the number of cars and events needed
 			for (int i=0; i<totalCarsUsed; i++) {
@@ -74,8 +132,16 @@ public class Main {
 			
 			// fill data into the events
 			for (int i = 0; i < totalCarsUsed; i++) {
-				eventList[i].setupEvent(carList[i], entryTime[i], exitTime[i]);
+				eventList[i].setupEvent(carList[i], events[0][i], events[1][i]);
 			}
+			
+//			for (int i = 0; i < totalCarsUsed; i++) {
+//				System.out.println(eventList[i].getEntryTime());
+//				System.out.println(eventList[i].getBackOrderTime());
+//				System.out.println("---");
+//			}
+//			return;
+			
 			
 		} else {
 			totalCarsUsed = 480;
@@ -100,7 +166,7 @@ public class Main {
 		
 		
 		boolean chaoticUnparking = true;
-		int imageEveryXTicks = 1;
+		int imageEveryXTicks = 3;
 		
 		// run the simulator
 		simulator.runSimulator(0, false, imageEveryXTicks, verboseLevel, chaoticUnparking);
@@ -376,5 +442,15 @@ public class Main {
 	
 	private static void evaluateResults() {
 		; // TODO
+	}
+	
+	
+	private static float getRandomNumber() {
+		SecureRandom random = new SecureRandom();
+		int test = Math.abs(random.nextInt());
+//		System.out.println(test);
+		float test2 = (float)(test)/(float)(Integer.MAX_VALUE);
+//		System.out.println(test2);
+		return test2;
 	}
 }
