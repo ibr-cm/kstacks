@@ -82,7 +82,7 @@ public class Car {
 		float hue = (this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
 		hue -= (int)hue;
 		hue = hue*0.8f+0.1f;
-		if (this.kstack.id == 562) hue = 0.0f;
+		if (this.kstack.id == 558) hue = 0.0f;
 		this.color = Color.getHSBColor(hue, 1.0f, (float)(0.5*Math.random()+0.5));
 		this.currentStreet = spawn;
 		spawn.car = this;
@@ -283,7 +283,7 @@ public class Car {
 			debugOutput("isPrevTileFree: false because street before kstack is not blocked",2);
 			return false;
 		}
-		if (tempStreet1.car == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
+		if (tempStreet1.car == null && tempStreet1.carAtLastTick == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
 			debugOutput("isPrevTileFree: true",2);
 			return true;
 		}
