@@ -131,14 +131,18 @@ public class Simulator {
 		this.visualOutput = 0;//visualOutput;
 
 		
+		
 		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
 			
-			boolean renderImage = true;
+//			boolean renderImage = true;
 			
-			if(tick == 16650) {
+			if(tick == 18845) {
 				this.visualOutput = 1;
 				this.verboseLevel = 2;
 			}
+			
+			if(tick == 18870)
+				return;
 			
 			if ((tick%1000)==0)
 				System.out.println(tick);
@@ -153,7 +157,8 @@ public class Simulator {
 			checkForRoundRobinAtCrossroad();
 			// TODO ROUND ROBIN @ crossroad
 			
-			renderImage = moveCars();
+//			renderImage = moveCars();
+			moveCars();
 			debugOutput("Moved Cars",2);
 			
 			checkForStartsStops();
@@ -164,9 +169,9 @@ public class Simulator {
 			
 			checkForSpawns();
 			
-			if (!renderImage)
-				renderImage = spawnCar();
-			else
+//			if (!renderImage)
+//				renderImage = spawnCar();
+//			else
 				spawnCar();
 			
 			checkForUnparkingEvents();
@@ -176,7 +181,7 @@ public class Simulator {
 				if (eventList[i].getCar().isInParkingLot())
 					carsInLot = true;
 				
-			if (carsInLot && visualOutput != 0 && (tick%visualOutput)==0) {
+			if (carsInLot && this.visualOutput != 0 && (tick%this.visualOutput)==0) {
 				try {
 					generateImage(Integer.toString(tick)+"_0");
 				} catch (Exception e) {debugOutput(""+e,2);}
@@ -375,13 +380,13 @@ public class Simulator {
 		boolean renderImage = false;
 		for (int i=0; i<eventList.length; i++) {
 			if (eventList[i].getCar().isInParkingLot()) {
-				debugOutput("==========",2);
-				debugOutput("Trying to move car "+eventList[i].getCar(),2);
+//				debugOutput("==========",2);
+//				debugOutput("Trying to move car "+eventList[i].getCar(),2);
 				if (!renderImage)
 					renderImage = eventList[i].getCar().drive();
 				else
 					eventList[i].getCar().drive();
-				debugOutput("==========",2);
+//				debugOutput("==========",2);
 			}
 		}
 		return renderImage;
@@ -917,7 +922,7 @@ l4:						while (tempStreet1.car != null) {
 		}
 		for (int i = 0; i < parkingRows+2+kHeight*carSize+carSize; i++) {
 			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.color);
+				g.setColor(tempStreet1.car.getColor());
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -933,7 +938,7 @@ l4:						while (tempStreet1.car != null) {
 		Street tempStreet2 = spawn.next3;
 		for (int i = 1; i < 2*kHeight*carSize+2; i++) {
 			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.color);
+				g.setColor(tempStreet1.car.getColor());
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -941,7 +946,7 @@ l4:						while (tempStreet1.car != null) {
 			g.fillRect(carSize*kHeight*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.color);
+				g.setColor(tempStreet2.car.getColor());
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -955,7 +960,7 @@ l4:						while (tempStreet1.car != null) {
 		// use the position of the streets and keep painting upper and lower horizontal streets
 		for (int i = 0; i < parkingRows; i++) {
 			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.color);
+				g.setColor(tempStreet1.car.getColor());
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -963,7 +968,7 @@ l4:						while (tempStreet1.car != null) {
 			g.fillRect((carSize*kHeight+1+i)*PIX_SIZE, (((Y/2))-2*carSize*kHeight-1)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.color);
+				g.setColor(tempStreet2.car.getColor());
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -977,7 +982,7 @@ l4:						while (tempStreet1.car != null) {
 		// and now the right vertical streets
 		for (int i = 2*kHeight*carSize+1; i > 0; i--) {
 			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.color);
+				g.setColor(tempStreet1.car.getColor());
 			} else if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -985,7 +990,7 @@ l4:						while (tempStreet1.car != null) {
 			g.fillRect((carSize*kHeight+parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
 			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.color);
+				g.setColor(tempStreet2.car.getColor());
 			} else if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
@@ -1014,7 +1019,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -1028,7 +1033,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -1058,7 +1063,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -1072,7 +1077,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -1102,7 +1107,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
@@ -1116,7 +1121,7 @@ l2:			while (tempStreet1 != crossroad) {
 					
 					while (tempStreet1 != null) {
 						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.color);
+							g.setColor(tempStreet1.car.getColor());
 							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;

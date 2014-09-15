@@ -1,4 +1,5 @@
 import java.security.SecureRandom;
+import java.util.Random;
 
 import au.com.bytecode.opencsv.CSV;
 import au.com.bytecode.opencsv.CSVReadProc;
@@ -11,6 +12,7 @@ public class Main {
 	private static Crossroad crossroad;
 	private static Despawn despawn;
 	private static KStack kstacks[];
+	public static Random random;
 	
 	public static int[][] csvData;
 	public static int size;
@@ -26,6 +28,8 @@ public class Main {
 		spawn = new Spawn();
 		crossroad = new Crossroad();
 		despawn = new Despawn();
+		
+		random = new Random(1000);
 		
 		// first third belongs to top lane; second third belongs to middle lane
 		// last third belongs to bottom lane;
@@ -91,7 +95,7 @@ public class Main {
 						}
 					}
 					if (list.size() != 0) {
-						float random = getRandomNumber();
+						float random = getRandomNumber(false);
 						int exitIndex = list.getListEntry((int)(random*(float)(list.size()))).index;
 						csvData[1][i]--;
 						csvData[2][exitIndex]--;
@@ -118,7 +122,7 @@ public class Main {
 				System.out.println(events[1][i]);
 			}
 			
-//			if (true)return;
+			//if (true)return;
 			
 			Car[] carList = new Car[totalCarsUsed];
 			eventList = new EventItem[totalCarsUsed];
@@ -184,19 +188,6 @@ public class Main {
 
 		System.out.println();
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		// print out the streets before the spawn
 		tempStreet2 = spawn;
 		System.out.println(tempStreet2+"  kstack1: "+tempStreet2.kstack1+"  kstack2: "+tempStreet2.kstack2);
@@ -445,7 +436,9 @@ public class Main {
 	}
 	
 	
-	private static float getRandomNumber() {
+	private static float getRandomNumber(boolean secureRandom) {
+		if (!secureRandom)
+			return (float)(random.nextFloat());
 		SecureRandom random = new SecureRandom();
 		int test = Math.abs(random.nextInt());
 //		System.out.println(test);

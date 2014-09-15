@@ -42,7 +42,7 @@ public class Car {
 	
 	public boolean disabled;
 	
-	public Color color;
+	private Color color;
 	
 	
 	
@@ -82,6 +82,7 @@ public class Car {
 		float hue = (this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
 		hue -= (int)hue;
 		hue = hue*0.8f+0.1f;
+		if (this.kstack.id == 562) hue = 0.0f;
 		this.color = Color.getHSBColor(hue, 1.0f, (float)(0.5*Math.random()+0.5));
 		this.currentStreet = spawn;
 		spawn.car = this;
@@ -336,5 +337,11 @@ public class Car {
 	 */
 	public boolean isInParkingLot() {
 		return this.isInParkingLot;
+	}
+	
+	public Color getColor() {
+//		if (drivingTarget != null)
+//			return Color.getHSBColor(0.1f, 1.0f, 1.0f);
+		return this.color;
 	}
 }
