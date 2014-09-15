@@ -194,12 +194,9 @@ public class Simulator {
 					generateImage(Integer.toString(tick)+"_0");
 				} catch (Exception e) {debugOutput(""+e,2);}
 			} else {
-//				System.out.println("Image omitted");
+				debugOutput("Image omitted",2);
 			}
-			
-			debugOutput("kstack 558 watermark: "+kstack[558].watermark,2);
-			debugOutput("unparking: "+kstack[558].lockedForUnparking+", parking: "+kstack[558].lockedForParking,2);
-			
+
 			tick++;
 			debugOutput("=============================================================",2);
 		}
