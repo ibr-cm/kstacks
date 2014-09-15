@@ -45,6 +45,10 @@ public class EventItem {
 		this.backOrderDelay++;
 	}
 	
+	public void increaseEntryDelay() {
+		this.entryDelay++;
+	}
+	
 	
 	/*
 	 * Methods to get values

@@ -41,6 +41,7 @@ public class Main {
 
 		EventItem[] eventList;
 		boolean CSVinsteadofLoop = true;
+		boolean useSecureRandom = true;
 		
 		
 		if (CSVinsteadofLoop) {
@@ -58,7 +59,7 @@ public class Main {
 			    	size = rowIndex+1;
 			    }
 			});
-			System.out.println(size);
+//			System.out.println(size);
 			csvData = new int[3][size];
 			csv.read("adjusted.csv", new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
@@ -95,7 +96,7 @@ public class Main {
 						}
 					}
 					if (list.size() != 0) {
-						float random = getRandomNumber(false);
+						float random = getRandomNumber(useSecureRandom);
 						int exitIndex = list.getListEntry((int)(random*(float)(list.size()))).index;
 						csvData[1][i]--;
 						csvData[2][exitIndex]--;
@@ -117,10 +118,11 @@ public class Main {
 			
 //			System.out.println(totalCarsUsed);
 			
+			System.out.println("# EntryTime,ExitTime");
 			for (int i = 0; i < totalCarsUsed; i++) {
-				System.out.print(events[0][i]+" ");
-				System.out.println(events[1][i]);
+				System.out.println(events[0][i]+","+events[1][i]);
 			}
+			
 			
 			//if (true)return;
 			
@@ -148,7 +150,9 @@ public class Main {
 			
 			
 		} else {
-			totalCarsUsed = 480;
+			
+			/** ROUND ROBIN TEST CASE **/
+			totalCarsUsed = 630;
 			Car[] carList = new Car[totalCarsUsed];
 			eventList = new EventItem[totalCarsUsed];
 			// creating the number of cars and events needed
@@ -158,12 +162,12 @@ public class Main {
 			}
 			// fill data into the events
 			for (int i = 0; i < totalCarsUsed; i++) {
-				eventList[i].setupEvent(carList[i], 0, 1200+(int)(Math.random()*350));
+				eventList[i].setupEvent(carList[i], i, 2500);
 			}
 		}
 		
 		
-		
+		System.out.println("# EntryTime,EntryDelay,BackOrderTime,BackOrderDelay,ExitTime,ExitTime-BackOrderTime,tilesMoved,startstop");
 		
 		// create an instance of the simulator itself
 		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows);

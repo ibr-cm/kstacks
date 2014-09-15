@@ -127,8 +127,8 @@ public class Simulator {
 		
 		this.debug = debug;
 		this.chaoticUnparking = chaoticUnparking;
-		this.verboseLevel = 0;//verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
-		this.visualOutput = 5;//visualOutput;
+		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
+		this.visualOutput = visualOutput;
 
 		
 		
@@ -136,33 +136,33 @@ public class Simulator {
 			
 //			boolean renderImage = true;
 			
-//			if(tick == 26470) {
+//			if(tick == 2500) {
 //				this.visualOutput = 1;
 //				this.verboseLevel = 2;
 //			}
 			
-//			if(tick == 27565)
+//			if(tick == 2501)
 //				return;
 			
-			if ((tick%500)==0) {
-				System.out.println(tick);
-				int counter = 0;
-				for (int i = 0; i < eventList.length; i++) {
-					if (eventList[i].getCar().isInParkingLot())
-						counter++;
-				}
-				System.out.println("counter: "+counter);
-				System.out.println("===");
-			}
+//			if ((tick%500)==0) {
+//				System.out.println(tick);
+//				int counter = 0;
+//				for (int i = 0; i < eventList.length; i++) {
+//					if (eventList[i].getCar().isInParkingLot())
+//						counter++;
+//				}
+//				System.out.println("counter: "+counter);
+//				System.out.println("===");
+//			}
 			
 			debugOutput("=============================================================",2);
-			debugOutput("Tick: "+tick,1);
+			debugOutput("Tick: "+tick,2);
 			debugOutput("=============================================================",2);
 			
 			this.usedByKStacks = null;
 			checkForStreetBlocking();
 			
-			checkForRoundRobinAtCrossroad();
+			checkForRoundRobinAtCrossroad(3);
 			// TODO ROUND ROBIN @ crossroad
 			
 //			renderImage = moveCars();
@@ -201,7 +201,7 @@ public class Simulator {
 			debugOutput("=============================================================",2);
 		}
 		long duration = System.currentTimeMillis()-time;
-		System.out.println("Gesamtdauer "+((int)(duration/60000))+" min "+(((int)(duration/1000))%60)+" sek.");
+		System.out.println("# Gesamtdauer "+((int)(duration/60000))+" min "+(((int)(duration/1000))%60)+" sek.");
 	}
 	
 	
@@ -352,6 +352,12 @@ public class Simulator {
 				
 				// remove recently spawned car from spawnList
 				spawnList = spawnList.next;
+			} else {
+				SpawnEvent tempSpawnEvent = spawnList;
+				while (tempSpawnEvent != null) {
+					tempSpawnEvent.eventItem.increaseEntryDelay();
+					tempSpawnEvent = tempSpawnEvent.next;
+				}
 			}
 			debugOutput("==========",2);
 			return true;
@@ -480,12 +486,13 @@ l4:						while (tempStreet1.car != null) {
 								
 								newUnparkEvent.firstInQueue = tempCar1;
 								
-								DrivingTarget tempDrivingTarget[] = new DrivingTarget[3];
+								DrivingTarget tempDrivingTarget[] = new DrivingTarget[4];
 								tempStreet1.car.parkingSpot--;
 								debugOutput("scheduleUnparking: new targets for car "+tempStreet1.car+": "+unparkingSpot(counter, newUnparkEvent.getKStack())+", "+newUnparkEvent.getCarToUnpark().currentStreet,2);
 								tempDrivingTarget[0] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'R', null, null, false, unparkingList, null, false);
 								tempDrivingTarget[1] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'N', null, null, false, unparkingList, null, false);
-								tempDrivingTarget[2] = new DrivingTarget(getParkingSpot(tempStreet1.car), 'D', null, newUnparkEvent.getKStack(), false, unparkingList, null, false);
+								tempDrivingTarget[2] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'N', null, null, false, unparkingList, null, false);
+								tempDrivingTarget[3] = new DrivingTarget(getParkingSpot(tempStreet1.car), 'D', null, newUnparkEvent.getKStack(), false, unparkingList, null, false);
 								tempCar1.drivingTarget = tempDrivingTarget;
 								
 							}
@@ -494,9 +501,9 @@ l4:						while (tempStreet1.car != null) {
 							tempStreet1 = tempStreet1.prev1;
 						}
 						debugOutput("checkForUnparkingEvents: cars in the way = "+newUnparkEvent.carsInTheWay,2);
-						newUnparkEvent.firstInQueue.drivingTarget[2].reduceWatermark = true;
-						newUnparkEvent.firstInQueue.drivingTarget[2].unlockKStackForUnparking = newUnparkEvent.getKStack();
-						newUnparkEvent.firstInQueue.drivingTarget[2].continousUnblocking = true;
+						newUnparkEvent.firstInQueue.drivingTarget[3].reduceWatermark = true;
+						newUnparkEvent.firstInQueue.drivingTarget[3].unlockKStackForUnparking = newUnparkEvent.getKStack();
+						newUnparkEvent.firstInQueue.drivingTarget[3].continousUnblocking = true;
 					}
 					this.unparkingList.addEvent(newUnparkEvent);
 					debugOutput("==========",2);
@@ -682,12 +689,17 @@ l4:						while (tempStreet1.car != null) {
 	}
 	
 	
-	private void checkForRoundRobinAtCrossroad() {
+	private void checkForRoundRobinAtCrossroad(int iterations) {
+		if (iterations == 0||crossroad.car != null)
+			return;
 		Street list[] = {crossroad.prev1, crossroad.prev2, crossroad.prev3};
 		
-		//if there is a car on the crossroad the rules of this method do not apply
-		if (this.crossroad.car != null || (list[0].car == null && list[1].car == null && list[2].car == null))
-			return;
+//		if (list[crossroadRoundRobinState].car != null) {
+//			if (list[(crossroadRoundRobinState+1)%3].car != null)
+//				list[(crossroadRoundRobinState+1)%3].car.disabled = true;
+//			if (list[(crossroadRoundRobinState+2)%3].car != null)
+//				list[(crossroadRoundRobinState+2)%3].car.disabled = true;
+//		}
 		
 		if (list[crossroadRoundRobinState].car != null) {
 			list[crossroadRoundRobinState].car.disabled = false;
@@ -695,10 +707,12 @@ l4:						while (tempStreet1.car != null) {
 				list[(crossroadRoundRobinState+1)%3].car.disabled = true;
 			if (list[(crossroadRoundRobinState+2)%3].car != null)
 				list[(crossroadRoundRobinState+2)%3].car.disabled = true;
+			crossroadRoundRobinState = (crossroadRoundRobinState+1)%3;
 		} else {
 			crossroadRoundRobinState = (crossroadRoundRobinState+1)%3;
-			checkForRoundRobinAtCrossroad();
+			checkForRoundRobinAtCrossroad(iterations-1);
 		}
+		
 	}
 	
 	
@@ -857,22 +871,23 @@ l4:						while (tempStreet1.car != null) {
 	 */
 	private void printEventItem(EventItem item) {
 		// if verboselevel is 2 this "==========" will appear here anyway
-		if (verboseLevel == 1)
-			debugOutput("==========",1);
+//		if (verboseLevel == 1)
+//			debugOutput("==========",1);
 		int stats[] = item.getEventStats();
-		debugOutput("EventItem "+item+" of car "+item.getCar(),1);
-		debugOutput("Entry Time: "+stats[0],1);
-		debugOutput("Entry Delay: "+stats[1],1);
-		debugOutput("BackOrder Time: "+stats[2],1);
-		if (verboseLevel == -1)
-			System.out.println(stats[4]-stats[2]);
-		else
-			debugOutput("BackOrder Delay: "+stats[3],1);
-		debugOutput("Exit Time: "+stats[4],1);
-		debugOutput("Moved Tiles: "+item.getCar().tilesMoved,1);
-		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
-		debugOutput("Watermark: "+item.getCar().kstack.watermark,1);
-		debugOutput("==========",1);
+//		debugOutput("EventItem "+item+" of car "+item.getCar(),1);
+//		debugOutput("Entry Time: "+stats[0],1);
+//		debugOutput("Entry Delay: "+stats[1],1);
+//		debugOutput("BackOrder Time: "+stats[2],1);
+//		if (verboseLevel == -1)
+//			System.out.println(stats[4]-stats[2]);
+//		else
+//			debugOutput("BackOrder Delay: "+stats[3],1);
+//		debugOutput("Exit Time: "+stats[4],1);
+//		debugOutput("Moved Tiles: "+item.getCar().tilesMoved,1);
+//		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
+//		debugOutput("Watermark: "+item.getCar().kstack.watermark,1);
+//		debugOutput("==========",1);
+		debugOutput(stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop,1);
 	}
 	
 	private void generateImage(String tick) throws Exception{
