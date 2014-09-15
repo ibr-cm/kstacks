@@ -200,8 +200,8 @@ public class Simulator {
 			tick++;
 			debugOutput("=============================================================",2);
 		}
-		
-		System.out.println(System.currentTimeMillis()-time);
+		long duration = System.currentTimeMillis()-time;
+		System.out.println("Gesamtdauer "+((int)(duration/60000))+" min "+(((int)(duration/1000))%60)+" sek.");
 	}
 	
 	
