@@ -128,7 +128,7 @@ public class Simulator {
 		this.debug = debug;
 		this.chaoticUnparking = chaoticUnparking;
 		this.verboseLevel = 0;//verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
-		this.visualOutput = 0;//visualOutput;
+		this.visualOutput = 5;//visualOutput;
 
 		
 		
@@ -136,16 +136,24 @@ public class Simulator {
 			
 //			boolean renderImage = true;
 			
-			if(tick == 18845) {
-				this.visualOutput = 1;
-				this.verboseLevel = 2;
-			}
+//			if(tick == 26470) {
+//				this.visualOutput = 1;
+//				this.verboseLevel = 2;
+//			}
 			
-			if(tick == 18870)
-				return;
+//			if(tick == 27565)
+//				return;
 			
-			if ((tick%1000)==0)
+			if ((tick%500)==0) {
 				System.out.println(tick);
+				int counter = 0;
+				for (int i = 0; i < eventList.length; i++) {
+					if (eventList[i].getCar().isInParkingLot())
+						counter++;
+				}
+				System.out.println("counter: "+counter);
+				System.out.println("===");
+			}
 			
 			debugOutput("=============================================================",2);
 			debugOutput("Tick: "+tick,1);
@@ -188,6 +196,9 @@ public class Simulator {
 			} else {
 //				System.out.println("Image omitted");
 			}
+			
+			debugOutput("kstack 558 watermark: "+kstack[558].watermark,2);
+			debugOutput("unparking: "+kstack[558].lockedForUnparking+", parking: "+kstack[558].lockedForParking,2);
 			
 			tick++;
 			debugOutput("=============================================================",2);
@@ -420,11 +431,11 @@ public class Simulator {
 					
 					// decide whether there is one car which has to unpark or more than one car
 					Street tempStreet1 = eventList[i].getCar().currentStreet;
-					while (tempStreet1.car == eventList[i].getCar())
+					while (tempStreet1.car == eventList[i].getCar() && tempStreet1 != eventList[i].getCar().kstack)
 						tempStreet1 = tempStreet1.prev1;
 					
 					// only one car unparking
-					if (tempStreet1.car == null) {
+					if (tempStreet1.car == null || tempStreet1.car == eventList[i].getCar()) {
 						debugOutput("checkForUnparkingEvents: found just 1 car!",2);
 						newUnparkEvent.carsInTheWay = 0;
 						newUnparkEvent.firstInQueue = eventList[i].getCar();
