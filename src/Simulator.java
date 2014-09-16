@@ -180,7 +180,6 @@ public class Simulator {
 			} else {
 //				System.out.println("Image omitted");
 			}
-
 			tick++;
 			debugOutput("=============================================================",2);
 		}
