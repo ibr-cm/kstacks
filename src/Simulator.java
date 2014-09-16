@@ -130,15 +130,23 @@ public class Simulator {
 		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
 		this.visualOutput = visualOutput;
 
-		
+		this.visualOutput = 0;
+//		this.verboseLevel = 0;
 		
 		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
 			
 //			boolean renderImage = true;
 			
+			if (tick == 29460) {
+				this.visualOutput = 1;
+//				this.verboseLevel = 2;
+			}
+//				
+			if (tick == 29600)
+				return;
 			
 			
-			
+			System.out.println(this.tick);
 			debugOutput("=============================================================",2);
 			debugOutput("Tick: "+tick,2);
 			debugOutput("=============================================================",2);
@@ -180,6 +188,11 @@ public class Simulator {
 			} else {
 //				System.out.println("Image omitted");
 			}
+			
+//			if (tick > 29460) {
+//				System.out.println("tick: "+tick+", parking: "+kstack[138].lockedForParking+", unparking: "+kstack[138].lockedForUnparking);
+//			}
+			
 			tick++;
 			debugOutput("=============================================================",2);
 		}
@@ -277,16 +290,20 @@ public class Simulator {
 			// check if spawn is free -- possible cases
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
-			boolean spawnBlocked = false;
+			boolean spawnBlocked = false, freeAvailableKStack = false;
 			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || (kHeight*carSize>2?spawn.prev1.car != null:false)) {
 				debugOutput("spawnCar: Cannot spawn since spawn is blocked!",2);
 				spawnBlocked = true;
+			}
+			for (int i=0; i<kstack.length; i++) {
+				if (!kstack[i].lockedForParking)
+					freeAvailableKStack = true;
 			}
 			
 			debugOutput("spawnCar: Spawn was "+(spawnBlocked?"":"not ")+"blocked.",2);
 			
 			// if the spawn is not blocked the will be spawned
-			if (!spawnBlocked) {
+			if (!spawnBlocked && freeAvailableKStack) {
 				// index of the stack with the smallest amount of cars
 				// the boolean is for debug purposes -- if set to TRUE the
 				// simulator tries to stack all into kstack[0]
@@ -321,8 +338,8 @@ public class Simulator {
 				Street tempStreet1 = tempEventItem.getCar().kstack;
 				
 				// the kstack is locked for unparking but not for parking 
-				((KStack)tempStreet1).lockedForUnparking = true;
-				((KStack)tempStreet1).lockedForParking = true;
+				tempEventItem.getCar().kstack.lockedForUnparking = true;
+				tempEventItem.getCar().kstack.lockedForParking = true;
 //				debugOutput("spawnCar: carSize "+carSize);
 				debugOutput("spawnCar: watermark of "+tempStreet1+" is "+(tempEventItem.getCar().parkingSpot+1)+" and lockedForUnparking is "+tempEventItem.getCar().kstack.lockedForUnparking,2);
 				// fin the right spot where to park exactly
@@ -397,7 +414,7 @@ public class Simulator {
 		// Create a new UnparkEvent for every car that wants to unpark.
 		for (int i=0; i<eventList.length; i++) {
 			if (eventList[i].getBackOrderTime() + eventList[i].getBackOrderDelay() == tick) {
-				if (eventList[i].getCar().kstack.lockedForUnparking || eventList[i].getCar().drivingTarget != null) {
+				if (eventList[i].getCar().kstack.lockedForUnparking || eventList[i].getCar().kstack.lockedForParking || eventList[i].getCar().drivingTarget != null) {
 					debugOutput("==========",2);
 					eventList[i].increaseBackOrderDelay();
 					debugOutput("checkForUnparkingEvents: was delayed because the kstack was locked",2);
@@ -450,7 +467,7 @@ public class Simulator {
 						
 						// the new targets for the car which unparks
 						DrivingTarget[] tempTarget1 = new DrivingTarget[2];
-						tempTarget1[0] = new DrivingTarget(newUnparkEvent.getCarToUnpark().kstack.prev1, 'R', null, newUnparkEvent.getCarToUnpark().kstack, false, unparkingList, newUnparkEvent, false);
+						tempTarget1[0] = new DrivingTarget(newUnparkEvent.getCarToUnpark().kstack.prev1, 'R', null, null, false, unparkingList, newUnparkEvent, false);
 						tempTarget1[1] = new DrivingTarget(despawn, 'D', null, null, false, unparkingList, null, false);
 						eventList[i].getCar().drivingTarget = tempTarget1;
 						
@@ -475,7 +492,7 @@ l4:						while (tempStreet1.car != null) {
 								tempDrivingTarget[0] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'R', null, null, false, unparkingList, null, false);
 								tempDrivingTarget[1] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'N', null, null, false, unparkingList, null, false);
 								tempDrivingTarget[2] = new DrivingTarget(unparkingSpot(counter, newUnparkEvent.getKStack()), 'N', null, null, false, unparkingList, null, false);
-								tempDrivingTarget[3] = new DrivingTarget(getParkingSpot(tempStreet1.car), 'D', null, newUnparkEvent.getKStack(), false, unparkingList, null, false);
+								tempDrivingTarget[3] = new DrivingTarget(getParkingSpot(tempStreet1.car), 'D', null, null, false, unparkingList, null, false);
 								tempCar1.drivingTarget = tempDrivingTarget;
 								
 							}
@@ -484,8 +501,9 @@ l4:						while (tempStreet1.car != null) {
 							tempStreet1 = tempStreet1.prev1;
 						}
 						debugOutput("checkForUnparkingEvents: cars in the way = "+newUnparkEvent.carsInTheWay,2);
-						newUnparkEvent.firstInQueue.drivingTarget[3].reduceWatermark = true;
+						newUnparkEvent.firstInQueue.drivingTarget[0].reduceWatermark = true;
 						newUnparkEvent.firstInQueue.drivingTarget[3].unlockKStackForUnparking = newUnparkEvent.getKStack();
+						newUnparkEvent.firstInQueue.drivingTarget[3].unlockKStackForParking = newUnparkEvent.getKStack();
 						newUnparkEvent.firstInQueue.drivingTarget[3].continousUnblocking = true;
 					}
 					this.unparkingList.addEvent(newUnparkEvent);
@@ -622,6 +640,15 @@ l4:						while (tempStreet1.car != null) {
 			tempStreet1 = tempStreet1.next1;
 			tempStreet1.refresh(this.tick);
 		}
+		
+		for (int i = 0; i < kstack.length; i++) {
+			kstack[i].refresh(this.tick);
+			tempStreet1 = kstack[i];
+			while (tempStreet1.next1 != null) {
+				tempStreet1 = tempStreet1.next1;
+				tempStreet1.refresh(this.tick);
+			}
+		}
 	}
 	
 	/**
@@ -684,11 +711,11 @@ l4:						while (tempStreet1.car != null) {
 //				list[(crossroadRoundRobinState+2)%3].car.disabled = true;
 //		}
 		
-		if (list[crossroadRoundRobinState].car != null) {
+		if (list[crossroadRoundRobinState].car != null && list[crossroadRoundRobinState].car.drivingTarget[0].direction != 'R' && list[crossroadRoundRobinState].car.drivingTarget[0].street == despawn) {
 			list[crossroadRoundRobinState].car.disabled = false;
-			if (list[(crossroadRoundRobinState+1)%3].car != null)
+			if (list[(crossroadRoundRobinState+1)%3].car != null && list[(crossroadRoundRobinState+1)%3].car.drivingTarget[0].direction != 'R' && list[(crossroadRoundRobinState+1)%3].car.drivingTarget[0].street == despawn)
 				list[(crossroadRoundRobinState+1)%3].car.disabled = true;
-			if (list[(crossroadRoundRobinState+2)%3].car != null)
+			if (list[(crossroadRoundRobinState+2)%3].car != null && list[(crossroadRoundRobinState+2)%3].car.drivingTarget[0].direction != 'R' && list[(crossroadRoundRobinState+2)%3].car.drivingTarget[0].street == despawn)
 				list[(crossroadRoundRobinState+2)%3].car.disabled = true;
 			crossroadRoundRobinState = (crossroadRoundRobinState+1)%3;
 		} else {

@@ -19,9 +19,9 @@ public class Main {
 	
 	public static void main(String args[]) {
 		
-		parkingRows = 105;
+		parkingRows = 70;
 		carSize = 2;
-		kHeight = 2;
+		kHeight = 3;
 		
 		verboseLevel = 1;
 		
@@ -29,7 +29,7 @@ public class Main {
 		crossroad = new Crossroad();
 		despawn = new Despawn();
 		
-		random = new Random(1000);
+		random = new Random(1001);
 		
 		// first third belongs to top lane; second third belongs to middle lane
 		// last third belongs to bottom lane;
@@ -41,7 +41,7 @@ public class Main {
 
 		EventItem[] eventList;
 		boolean CSVinsteadofLoop = true;
-		boolean useSecureRandom = true;
+		boolean useSecureRandom = false;
 		
 		
 		if (CSVinsteadofLoop) {
