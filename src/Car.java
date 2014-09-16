@@ -340,8 +340,8 @@ public class Car {
 	}
 	
 	public Color getColor() {
-//		if (drivingTarget != null)
-//			return Color.getHSBColor(0.1f, 1.0f, 1.0f);
+		if (drivingTarget != null && this.kstack.id != 562)
+			return Color.getHSBColor(0.1f, 1.0f, 1.0f);
 		return this.color;
 	}
 }

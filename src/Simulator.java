@@ -136,24 +136,8 @@ public class Simulator {
 			
 //			boolean renderImage = true;
 			
-//			if(tick == 2500) {
-//				this.visualOutput = 1;
-//				this.verboseLevel = 2;
-//			}
 			
-//			if(tick == 2501)
-//				return;
 			
-//			if ((tick%500)==0) {
-//				System.out.println(tick);
-//				int counter = 0;
-//				for (int i = 0; i < eventList.length; i++) {
-//					if (eventList[i].getCar().isInParkingLot())
-//						counter++;
-//				}
-//				System.out.println("counter: "+counter);
-//				System.out.println("===");
-//			}
 			
 			debugOutput("=============================================================",2);
 			debugOutput("Tick: "+tick,2);
@@ -194,7 +178,7 @@ public class Simulator {
 					generateImage(Integer.toString(tick)+"_0");
 				} catch (Exception e) {debugOutput(""+e,2);}
 			} else {
-				debugOutput("Image omitted",2);
+//				System.out.println("Image omitted");
 			}
 
 			tick++;
@@ -422,7 +406,7 @@ public class Simulator {
 				} else {
 					debugOutput("==========",2);
 					debugOutput("scheduleUnparking: Creating an unparking Event at "+this.tick+" tick(s).",2);
-					debugOutput("scheduleUnparking: stack "+eventList[i].getCar().kstack.id,2);
+					debugOutput("scheduleUnparking: Stack: "+eventList[i].getCar().kstack.id+".",2);
 					UnparkEvent newUnparkEvent = new UnparkEvent();
 					newUnparkEvent.setCarToUnpark(eventList[i].getCar()); // Car that wants to leave its spot.
 					newUnparkEvent.getKStack().lockedForParking = true;
@@ -712,7 +696,6 @@ l4:						while (tempStreet1.car != null) {
 			crossroadRoundRobinState = (crossroadRoundRobinState+1)%3;
 			checkForRoundRobinAtCrossroad(iterations-1);
 		}
-		
 	}
 	
 	
