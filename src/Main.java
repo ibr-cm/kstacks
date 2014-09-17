@@ -23,7 +23,7 @@ public class Main {
 		carSize = 2;
 		kHeight = 3;
 		
-		verboseLevel = 1;
+		verboseLevel = 0;
 		
 		spawn = new Spawn();
 		crossroad = new Crossroad();
@@ -41,7 +41,7 @@ public class Main {
 
 		EventItem[] eventList;
 		boolean CSVinsteadofLoop = true;
-		boolean useSecureRandom = false;
+		boolean useSecureRandom = true;
 		
 		
 		if (CSVinsteadofLoop) {
@@ -174,7 +174,7 @@ public class Main {
 		
 		
 		boolean chaoticUnparking = true;
-		int imageEveryXTicks = 3;
+		int imageEveryXTicks = 1;
 		
 		// run the simulator
 		simulator.runSimulator(0, false, imageEveryXTicks, verboseLevel, chaoticUnparking);

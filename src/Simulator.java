@@ -130,20 +130,20 @@ public class Simulator {
 		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
 		this.visualOutput = visualOutput;
 
-		this.visualOutput = 0;
+//		this.visualOutput = 0;
 //		this.verboseLevel = 0;
 		
 		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
 			
 //			boolean renderImage = true;
 			
-			if (tick == 29460) {
-				this.visualOutput = 1;
+//			if (tick == 29460) {
+//				this.visualOutput = 1;
 //				this.verboseLevel = 2;
-			}
+//			}
 //				
-			if (tick == 29600)
-				return;
+//			if (tick == 29600)
+//				return;
 			
 			
 			System.out.println(this.tick);
@@ -183,7 +183,7 @@ public class Simulator {
 				
 			if (carsInLot && this.visualOutput != 0 && (tick%this.visualOutput)==0) {
 				try {
-					generateImage(Integer.toString(tick)+"_0");
+					generateImage(tick);
 				} catch (Exception e) {debugOutput(""+e,2);}
 			} else {
 //				System.out.println("Image omitted");
@@ -899,12 +899,23 @@ l4:						while (tempStreet1.car != null) {
 		debugOutput(stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop,1);
 	}
 	
-	private void generateImage(String tick) throws Exception{
+	private void generateImage(int tick) throws Exception{
 		int X = 2+this.parkingRows+this.carSize+this.carSize*this.kHeight, Y = (6*this.carSize*this.kHeight)+3;
-		int x =0, y = 0, PIX_SIZE = 15;
+		int x =0, y = 0, PIX_SIZE = 16;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
 		Graphics2D g=(Graphics2D)bi.getGraphics();
-		String filename =  "tick_"+tick+ "_img.png";
+		String filename =  "tick_";
+		if (tick < 100000)
+			filename += "0";
+		if (tick < 10000)
+			filename += "0";
+		if (tick < 1000)
+			filename += "0";
+		if (tick < 100)
+			filename += "0";
+		if (tick < 10)
+			filename += "0";
+		filename += tick+".png";
 		
 		// paint everything white
 		for( int i = 0; i < X; i++ ){

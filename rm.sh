@@ -1,1 +1,2 @@
-rm *_img.png
+rm *.png
+rm *.jpg
