@@ -6,6 +6,7 @@ public class KStack extends Street{
 	public boolean lockedForUnparking;
 	public UnparkEvent currentUnparkEvent;
 	public boolean disabled;
+	public Street lane;
 	public KStack(int id) {
 		super();
 		this.disabled = false;

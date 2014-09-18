@@ -1,8 +1,12 @@
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -10,6 +14,7 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.RestoreAction;
 
 
 
@@ -68,27 +73,33 @@ public class Simulator {
 	 */
 	private Street[] usedByKStacks;
 	
-	/**
-	 * If this boolean is set to true every KStack can unpark at anytime given
-	 * the space is free. The simulator does care for the order unparking
-	 * orders came in. As soon the space is free the KStack will unpark. This
-	 * can lead to heavy delays for individual unparking events but might
-	 * increase mean performance.
-	 * If it is set to false the simulator will follow the order in which cars
-	 * parked and makes unparking events with lower priority wait.
-	 */
-	private boolean chaoticUnparking;
-	
 	
 	private int kHeight;
 	private int carSize;
 	private int parkingRows;
-	private boolean debug;
+//	private boolean debug;
 	private int visualOutput;
 	private int verboseLevel;
 	private int crossroadRoundRobinState;
 	
-	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, int kHeight, int carSize, int parkingRows) {
+	/**
+	 * This four variables are for creating images and debug output between the
+	 * both ints (measured in ticks). If both are set to 0 this is disabled.
+	 * The simulator will not print any output before tick == start and will
+	 * stop running after reaching tick == stop.
+	 */
+	private int debugStart = 10000, debugStop = 10100;
+	private boolean debugPictureOutput = true, debugOutput = true;
+	
+	private BufferedWriter writer = null;
+	private String resultName;
+	
+	/**
+	 * Configuration file where most global variables
+	 */
+	private Configuration config = new Configuration();
+	
+	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, int kHeight, int carSize, int parkingRows, String resultName) {
 		this.tick = 0;
 		this.spawn = spawn;
 		this.despawn = despawn;
@@ -104,6 +115,16 @@ public class Simulator {
 		this.verboseLevel = 2;
 		this.spawnList = null;
 		this.crossroadRoundRobinState = 0;
+		
+		this.resultName = resultName;
+		
+		try{
+			File results = new File("./"+resultName+"/results_"+resultName+".csv");
+			writer = new BufferedWriter(new FileWriter(results));
+			writer.write("# EntryTime,EntryDelay,BackOrderTime,BackOrderDelay,ExitTime,ExitTime-BackOrderTime,tilesMoved,startstop");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -121,32 +142,33 @@ public class Simulator {
 	 * preduces. 0 means no output, 1 means despawn events only, 2 means every-
 	 * thing the methods during the simulation process have to say.
 	 */
-	public void runSimulator(int maxTick, boolean debug, int visualOutput, int verboseLevel, boolean chaoticUnparking) {
+	@SuppressWarnings("unused")
+	public void runSimulator() {
 		
 		long time = System.currentTimeMillis();
 		
-		this.debug = debug;
-		this.chaoticUnparking = chaoticUnparking;
-		this.verboseLevel = verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
-		this.visualOutput = visualOutput;
+		this.verboseLevel = config.verboseLevel;//Math.min(Math.max(0, verboseLevel),2);
+		this.visualOutput = config.visualOutput;
 
-//		this.visualOutput = 0;
-//		this.verboseLevel = 0;
+		// disable previous settings for outputs
+		if (config.debugPeriodStart != -1 && config.debugPeriodStop != -1 && config.debugPeriodStart <= config.debugPeriodStop) {
+			this.visualOutput = 0;
+			this.verboseLevel = 0;
+		}
 		
-		while(!eventsFinished() && (tick<maxTick || maxTick == 0)) {
+		while(!eventsFinished()) {
 			
 //			boolean renderImage = true;
 			
-//			if (tick == 29460) {
-//				this.visualOutput = 1;
-//				this.verboseLevel = 2;
-//			}
+			if (config.debugPeriodStop != -1 && tick == this.debugStart) {
+				this.visualOutput = config.debugPeriodVisual;
+				this.verboseLevel = config.debugPersionVerbose;
+			}
 //				
-//			if (tick == 29600)
-//				return;
+			if (config.debugPeriodStop != 0 && tick == config.debugPeriodStop && config.debugBreakAfter)
+				return;
 			
 			
-			System.out.println(this.tick);
 			debugOutput("=============================================================",2);
 			debugOutput("Tick: "+tick,2);
 			debugOutput("=============================================================",2);
@@ -155,9 +177,6 @@ public class Simulator {
 			checkForStreetBlocking();
 			
 			checkForRoundRobinAtCrossroad(3);
-			// TODO ROUND ROBIN @ crossroad
-			
-//			renderImage = moveCars();
 			moveCars();
 			debugOutput("Moved Cars",2);
 			
@@ -181,10 +200,11 @@ public class Simulator {
 				if (eventList[i].getCar().isInParkingLot())
 					carsInLot = true;
 				
-			if (carsInLot && this.visualOutput != 0 && (tick%this.visualOutput)==0) {
+			if ((carsInLot || (debugStop != 0)) && this.visualOutput != 0 && (tick%this.visualOutput)==0) {
 				try {
 					generateImage(tick);
-				} catch (Exception e) {debugOutput(""+e,2);}
+				} catch (Exception e) {debugOutput(""+e,2);
+				System.out.println("Test!");}
 			} else {
 //				System.out.println("Image omitted");
 			}
@@ -307,20 +327,13 @@ public class Simulator {
 				// index of the stack with the smallest amount of cars
 				// the boolean is for debug purposes -- if set to TRUE the
 				// simulator tries to stack all into kstack[0]
-				int index = findSmallestStack(this.debug);
+				int index = findSmallestStack();
 				debugOutput("spawnCar: Car was put on stack "+index+" ("+this.kstack[index]+").",2);
 				
 				EventItem tempEventItem = spawnList.eventItem;
 				
 				// assign the right lane to a car
 				tempEventItem.getCar().kstack = kstack[index];
-				if (index/(kstack.length/3)==0) {
-					tempEventItem.getCar().lane = spawn.next1;
-				} else if (index/(kstack.length/3)==1) {
-					tempEventItem.getCar().lane = spawn.next2;
-				} else {
-					tempEventItem.getCar().lane = spawn.next3;
-				}
 				
 				// assign parkingSpot to the car
 				tempEventItem.getCar().parkingSpot = kstack[index].watermark;
@@ -390,20 +403,15 @@ public class Simulator {
 	 * lot and if it is this method tries to initiate driving. This depends on
 	 * the state of the driving targets. If the car has none it will not move.
 	 */
-	private boolean moveCars() {
-		boolean renderImage = false;
+	private void moveCars() {
 		for (int i=0; i<eventList.length; i++) {
 			if (eventList[i].getCar().isInParkingLot()) {
 //				debugOutput("==========",2);
 //				debugOutput("Trying to move car "+eventList[i].getCar(),2);
-				if (!renderImage)
-					renderImage = eventList[i].getCar().drive();
-				else
-					eventList[i].getCar().drive();
+				eventList[i].getCar().drive();
 //				debugOutput("==========",2);
 			}
 		}
-		return renderImage;
 	}
 	
 	/**
@@ -560,7 +568,7 @@ l4:						while (tempStreet1.car != null) {
 				boolean spaceIsFree = true;
 				debugOutput("checkForStreetBlocking: checking for space "+((tempUnparkEvent1.carsInTheWay+1)*this.carSize),2);
 				for (int i = 0; i < (tempUnparkEvent1.carsInTheWay+1)*this.carSize; i++) {
-					if (!this.chaoticUnparking) {
+					if (!config.chaoticUnparking) {
 						if (isStreetAlreadyUsedByKStack(tempStreet1)) {
 							spaceIsFree = false;
 						} else {
@@ -802,8 +810,8 @@ l4:						while (tempStreet1.car != null) {
 	 * @param testing if this is true the method will give always kstack[0]
 	 * @return kstack to park in
 	 */
-	private int findSmallestStack(boolean testing) {
-		if (!testing) {
+	private int findSmallestStack() {
+		if (config.debugSmallestStack == -1) {
 			int indexUnlockedStacks = -1, indexLockedStacks = -1;
 			int watermarkUnlockedStacks = kHeight, watermarkLockedStacks = kHeight;
 			
@@ -827,7 +835,7 @@ l4:						while (tempStreet1.car != null) {
 			return indexUnlockedStacks;
 		}
 		// when testing == true this always return kstack[0]
-		return 0;
+		return Math.min(config.debugSmallestStack,kstack.length-1);
 	}
 	
 	
@@ -1181,7 +1189,7 @@ l2:			while (tempStreet1 != crossroad) {
 		}
 		// save all the images!!
 		g.dispose();
-        saveToFile( bi, new File( filename ) );
+        saveToFile( bi, filename );
 	}
 	
 	
@@ -1192,14 +1200,15 @@ l2:			while (tempStreet1 != crossroad) {
 	 * @param file file where the image is supposed to go
 	 * @throws IOException something can always go wrong
 	 */
-	private void saveToFile( BufferedImage img, File file ) throws IOException {
+	private void saveToFile( BufferedImage img, String file ) throws IOException {
 		ImageWriter writer = null;
 		@SuppressWarnings("rawtypes")
 		java.util.Iterator iter = ImageIO.getImageWritersByFormatName("png");
 		if( iter.hasNext() ){
 		    writer = (ImageWriter)iter.next();
 		}
-		ImageOutputStream ios = ImageIO.createImageOutputStream( file );
+		String temp = "./"+resultName+"/"+file;
+		ImageOutputStream ios = ImageIO.createImageOutputStream( new File (temp) );
 		writer.setOutput(ios);
 		ImageWriteParam param = new JPEGImageWriteParam( java.util.Locale.getDefault() );
 		param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;

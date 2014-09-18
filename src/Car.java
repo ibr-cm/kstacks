@@ -4,13 +4,7 @@ import java.awt.Color;
 public class Car {
 	public int exitTime;
 	
-	public int startstop;
-	public boolean wasMoving;
-	public int tilesMoved;
-	
 	public int verboseLevel;
-	
-	// public char direction; // D, N, R = Drive, Neutral, Reverse
 	
 	public boolean unparking;
 	
@@ -30,34 +24,40 @@ public class Car {
 	
 	public DrivingTarget[] drivingTarget;
 	
+	/**
+	 * This variables are needed to check if the car is moving a tile and
+	 * count its starts and stops.
+	 */
 	public Street streetAtLastTick;
-	
-	public Street lane;
+	public int startstop;
+	public boolean wasMoving;
+	public int tilesMoved;
 	
 	public EventItem eventItem;
 	
-	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
-	
-//	public int[] color;
+//	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
 	
 	public boolean disabled;
 	
 	private Color color;
 	
-	private int debugKStackID = 138;
+	/**
+	 * This debug option marks all cars red, which are going to this KStack.
+	 * Disable by setting it to -1 or to a number higher than the number of
+	 * stacks available.
+	 */
+	private int debugKStackID = -1;
+	
+	private Configuration config;
 	
 	
 	public Car() {
 		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
-//		this.color = new int[3];
-//		this.color[0] = 0; // R
-//		this.color[1] = (int)(Math.random()*256); // G
-//		this.color[2] = (int)(Math.random()*256); // B
-		this.verboseLevel = 0;
+		this.verboseLevel = config.verboseLevel;
 		this.wasMoving = false;
 	}
 	
-	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, int verboseLevel) {
+	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad) {
 		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
 		this.size = size;
 		this.kstack = null;
@@ -68,21 +68,22 @@ public class Car {
 		this.startstop = 0;
 		this.tilesMoved = 0;
 		this.eventItem = eventItem;
-		this.firstRide = true;
+//		this.firstRide = true;
 		this.spawn = spawn;
 		this.despawn = despawn;
 		this.crossroad = crossroad;
 		this.parkingSpot = 0;
 		this.isInParkingLot = false;
 		this.disabled = false;
-		this.verboseLevel = verboseLevel;
+		this.verboseLevel = config.verboseLevel;
 	}
 	
 	public void spawn() {
 		float hue = (this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
 		hue -= (int)hue;
 		hue = hue*0.8f+0.1f;
-		if (this.kstack.id == this.debugKStackID) hue = 0.0f;
+		if (this.kstack.id == this.debugKStackID)
+			hue = 0.0f;  // Makes the car red in case of debugging this stack.
 		this.color = Color.getHSBColor(hue, 1.0f, (float)(0.5*Math.random()+0.5));
 		this.currentStreet = spawn;
 		spawn.car = this;
@@ -97,16 +98,16 @@ public class Car {
 		this.isInParkingLot = true;
 		this.kstack.lockedForUnparking = true; // locks kstack against unparking
 		
-		debugOutput("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+") through lane "+lane+".",2);
+		debugOutput("spawn: Car "+this+" spawn at "+this.spawn+" and was assigned to kStack "+this.kstack+" (parkingSpot "+this.parkingSpot+").",2);
 	}
 	
 	public void setDrivingTargets(DrivingTarget[] drivingTarget) {
 		this.drivingTarget = drivingTarget;
 	}
 	
-	public boolean drive() {
-		if (disabled || this.drivingTarget == null)
-			return false;
+	public void drive() {
+		if (this.drivingTarget == null || disabled)
+			return;
 		
 		
 		// if there are at least one more driving target the car tries to drive there
@@ -121,9 +122,9 @@ public class Car {
 			if (this.drivingTarget[0].direction == 'D') {
 				// Car stands at the spawn
 				if (this.currentStreet == spawn) {
-					if (isNextTileFree(this.lane)) {
-						this.lane.car = this;
-						this.currentStreet = this.lane;
+					if (isNextTileFree(this.kstack.lane)) {
+						this.kstack.lane.car = this;
+						this.currentStreet = this.kstack.lane;
 						clearTileBehindCar();
 						if (this.drivingTarget[0].continousUnblocking)
 							getPrevTile().blockingKStack = null;
@@ -238,11 +239,10 @@ public class Car {
 					}
 					drivingTarget = tempDrivingTarget;
 				}
-				this.firstRide = false;
+//				this.firstRide = false;
 				debugOutput("drive: drivingTarget now: "+drivingTarget,2);
 			}
 		}
-		return true;
 	}
 	
 	
@@ -283,7 +283,6 @@ public class Car {
 			debugOutput("isPrevTileFree: false because street before kstack is not blocked",2);
 			return false;
 		}
-		//&& tempStreet1.carAtLastTick == null
 		if (tempStreet1.car == null && tempStreet1.carAtLastTick == null && (this.unparking || tempStreet1.blockingKStack == null || tempStreet1.blockingKStack == this.kstack)) {
 			debugOutput("isPrevTileFree: true",2);
 			return true;
@@ -303,6 +302,12 @@ public class Car {
 		return tempStreet1;
 	}
 	
+	/**
+	 * This method makes outputs if applicable.
+	 * @param text Message to the command line.
+	 * @param priority This number has to be less or equal to the verboseLevel
+	 * or the text will not be displayed.
+	 */
 	private void debugOutput(String text, int priority) {
 		if (priority <= this.verboseLevel) {
 			System.out.println(text);
