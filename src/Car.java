@@ -48,8 +48,6 @@ public class Car {
 	
 	public EventItem eventItem;
 	
-//	public boolean firstRide; // mark if this is the first trip to the kstack; important if on the way to a kstack which is in action unparking
-	
 	public boolean disabled;
 	
 	private Color color;
@@ -65,12 +63,10 @@ public class Car {
 	
 	
 	public Car() {
-		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
-		this.verboseLevel = config.verboseLevel;
-		this.wasMoving = false;
 	}
 	
-	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad) {
+	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, Configuration config) {
+		this.config = config;
 		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
 		this.size = size;
 		this.kstack = null;
@@ -81,7 +77,6 @@ public class Car {
 		this.startstop = 0;
 		this.tilesMoved = 0;
 		this.eventItem = eventItem;
-//		this.firstRide = true;
 		this.spawn = spawn;
 		this.despawn = despawn;
 		this.crossroad = crossroad;
@@ -208,7 +203,6 @@ public class Car {
 				// If the car is reversing and driving forward right after that
 				// the car will stop and then drive in another direction. This
 				// could be counted as a stopping process.
-				// TODO: PUT config.stopAtUnparking INTO CONFIGURATION
 				if (config.stopAtUnparking) {
 					if (this.drivingTarget[0].direction == 'R' && this.drivingTarget[1].direction == 'D') {
 						// Now the car stopped and will be driving forward
@@ -271,7 +265,6 @@ public class Car {
 				debugOutput("drive: drivingTarget now: "+drivingTarget,2);
 			}
 		}
-		return true;
 	}
 	
 	

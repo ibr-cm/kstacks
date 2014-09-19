@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 /**
  * Confiugration file for the VCharge Simulator
  * 
@@ -9,6 +12,27 @@
  */
 
 public class Configuration {
+	
+	
+	/** CONFIGURATION FOR OUTPUT **/
+	
+	public Output output;
+	
+	/**
+	 * This variable sets the level of text output coming from the simulator.
+	 * If set to 0 no output is generated. 1 allows the output of despawn
+	 * events. 2 and above prints every debug message from the whole simulation
+	 * process in the command line interface.
+	 * 
+	 * This variable does -NOT- affect the logging of despawn events and the
+	 * corresponding information of every car into the csv inside the folder
+	 * the simulator creates prior to simulation.
+	 * 
+	 * DEFAULT: public final int verboseLevel = 0;
+	 */
+	public final int verboseLevel = 0;
+	
+	
 	
 	
 	
@@ -28,7 +52,7 @@ public class Configuration {
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
 	 * 5: TODO use a plain CSV
 	 */
-	public final int simulatorCase = 0;
+	public final int simulatorCase = 4;
 	
 	
 	/**
@@ -76,11 +100,18 @@ public class Configuration {
 	public final int noOfParkingSpaces = 1440;
 	public final int kHeight = 1;
 	public final int carSize = 2;
-	public final int parkingRows = (noOfParkingSpaces/kHeight)/6;
+	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
 	
-	
-	
+	/**
+	 * -DO NOT TOUCH-
+	 * 
+	 * This concatenates the string, which is used to make each simulation
+	 * unique and put it in the right folder.
+	 */
+	public final String date = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+	@SuppressWarnings("all")
+	public final String resultPostfix = ((simulatorCase == 4 || simulatorCase == 5)?"csv-input_":"testCase_")+simulatorCase+"_"+date;
 	
 	
 	
@@ -115,22 +146,14 @@ public class Configuration {
 	
 	/** CONFIGURATION FOR SIMULATOR **/
 	
-	/**
-	 * This variable sets the level of text output coming from the simulator.
-	 * If set to 0 no output is generated. 1 allows the output of despawn
-	 * events. 2 and above prints every debug message from the whole simulation
-	 * process in the command line interface.
-	 * 
-	 * This variable does -NOT- affect the logging of despawn events and the
-	 * corresponding information of every car into the csv inside the folder
-	 * the simulator creates prior to simulation.
-	 */
-	public final int verboseLevel = 0;
+	// for verboseLevel please see section CONFIGURATION FOR OUTPUT
 	
 	/**
 	 * This controls the visual output of the simulator. 0 means no visual
 	 * output, 1 means an image every tick, 2 means an image every other tick,
 	 * etc.
+	 * 
+	 * DEFAULT: public final int visualOutput = 0;
 	 */
 	public final int visualOutput = 0;
 	
@@ -142,6 +165,8 @@ public class Configuration {
 	 * but might increase mean performance.
 	 * If it is set to false the simulator will follow the order in which cars
 	 * wanted to unpark and makes unparking events with lower priority wait.
+	 * 
+	 * DEFAULT: public final boolean chaoticUnparking = false;
 	 */
 	public final boolean chaoticUnparking = false;
 	
@@ -158,7 +183,10 @@ public class Configuration {
 	 * will then be assigned to this stack. If the number is higher than the
 	 * number of stacks the cars will be assigned to the stack with the highest
 	 * id. So set to 15 with only 12 stacks total the simulator will send all
-	 * cars to stack 11 (counting starts at 0). To disable it set it to -1. 
+	 * cars to stack 11 (counting starts at 0). To disable it set it to -1 or
+	 * to an even lower value. 
+	 * 
+	 * DEFAULT: public final int debugSmallestStack = -1;
 	 */
 	public final int debugSmallestStack = -1;
 	
@@ -179,6 +207,12 @@ public class Configuration {
 	 * During the set period the the last two integer set the output the
 	 * simulator is supposed to give. For further information please see the
 	 * corresponding explanation in section CONFIGURATION FOR SIMULATOR.
+	 * 
+	 * DEFAULT: public final int debugPeriodStart = -1;
+	 * DEFAULT: public final int debugPeriodStop = -1;
+	 * DEFAULT: public final boolean debugBreakAfter = false; 
+	 * DEFAULT: public final int debugPeriodVisual = 0;
+	 * DEFAULT: public final int debugPersionVerbose = 0;
 	 */
 	public final int debugPeriodStart = -1;
 	public final int debugPeriodStop = -1;
@@ -192,6 +226,21 @@ public class Configuration {
 	
 	/** CONFIGURATION FOR CAR **/
 	
-	// for verboseLevel please see section CONFIGURATION FOR SIMULATOR
+	// for verboseLevel please see section CONFIGURATION FOR OUTPUT
+	
+	/**
+	 * If this boolean is set the car will add one stop to its counter for
+	 * starts and stops. It also sets the car to isMoving = false, when the
+	 * direction of driving is changed. E.g. when driving backwards in order to
+	 * unpark and then drive forward in order to reach despawn.
+	 * 
+	 * DEFAULT: public final boolean stopAtUnparking = true;
+	 */
+	public final boolean stopAtUnparking = true;
 
+	
+	public Configuration() {
+		this.output = new Output(this);
+	}
+	
 }

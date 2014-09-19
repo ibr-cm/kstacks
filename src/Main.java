@@ -1,9 +1,4 @@
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Random;
 
 import au.com.bytecode.opencsv.CSV;
@@ -19,24 +14,19 @@ public class Main {
 	private static KStack kstacks[];
 	public static Random mathRandom;
 	private static SecureRandom secRandom;
-	public static String resultName;
-//	private static boolean CSVinsteadofLoop; // see config file
-	private static int simulatorCase; // see config file
-	private static boolean secureRandom; // see config file
-	private static int randomSeed; // see config file
+	private static Configuration config;
 	
 	public static int[][] csvData;
 	public static int size;
 	
-	private static BufferedWriter writer = null;
 	
 	public static void main(String args[]) {
 		
-		Configuration config = new Configuration();
-		simulatorCase = config.simulatorCase;
-//		CSVinsteadofLoop = config.CSVinsteadofLoop;
-		secureRandom = config.secureRandom;
-		randomSeed = config.randomSeed;
+		long timeTotal = System.currentTimeMillis();
+		
+		config = new Configuration();
+		
+		config.output.writeDownSettings();
 		
 		parkingRows = config.parkingRows;
 		carSize = config.carSize;
@@ -48,8 +38,9 @@ public class Main {
 		crossroad = new Crossroad();
 		despawn = new Despawn();
 		
-		mathRandom = new Random(randomSeed);
-		secRandom.setSeed(randomSeed);
+		mathRandom = new Random(config.randomSeed);
+		secRandom = new SecureRandom();
+		secRandom.setSeed(config.randomSeed);
 		
 		// first third belongs to top lane; second third belongs to middle lane
 		// last third belongs to bottom lane;
@@ -58,26 +49,26 @@ public class Main {
 		
 		
 		// setting up the entire map
+		long timeMeasure = System.currentTimeMillis();
 		setupMap();
+		timeMeasure = System.currentTimeMillis() - timeMeasure;
+		config.output.writeToDebugFile("####################\r\n# Setting up map "+((int)(timeMeasure/60000))+" min "+(((int)(timeMeasure/1000))%60)+" sek.\r\n####################");
 
+		
+		
+		
 		EventItem[] eventList = new EventItem[2]; // will be initialized with correct data later
 		Car[] carList = new Car[2]; // will be initialized with correct data later
 
 		
 		
-		if (simulatorCase == 4 || simulatorCase == 5)
-			resultName = "csv-input_";
-		else
-			resultName = ("testCase_"+simulatorCase+"_");
-		resultName += new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-		
-		new File("./"+resultName).mkdir();
-		
-		writeDownSettings();
 		
 		
 		
 		
+		
+		
+		timeMeasure = System.currentTimeMillis();
 		
 		totalCarsUsed = kHeight*parkingRows*6;
 		// creating the number of cars and events needed
@@ -85,12 +76,12 @@ public class Main {
 		eventList = new EventItem[totalCarsUsed];
 		for (int i=0; i<totalCarsUsed; i++) {
 			eventList[i] = new EventItem();
-			carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad);
+			carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, config);
 		}
 		
 		int waitTime = (int)(2000*((float)(1440)/(float)(totalCarsUsed)))*2;
 		
-		switch(simulatorCase) {
+		switch(config.simulatorCase) {
 		case 0:
 			/** BEST CASE **/
 			for (int i = 0; i < totalCarsUsed; i++) {
@@ -118,13 +109,10 @@ public class Main {
 			break;
 			
 		case 4:
-			try{
-				File results = new File("./"+resultName+"/mapping_"+resultName+".csv");
-				writer = new BufferedWriter(new FileWriter(results));
-				writer.write("# EntryTime,BackOrderTime\r\n");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			try{
+//				writer = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/mapping_"+config.resultPostfix+".csv")));
+//				writer.write("# EntryTime,BackOrderTime\r\n");
+//			} catch (Exception e) {e.printStackTrace();}
 			
 			csvData = new int[3][1];
 			size = 0;
@@ -175,13 +163,13 @@ public class Main {
 						}
 					}
 					if (list.size() != 0) {
-						float random = getRandomNumber(secureRandom);
+						float random = getRandomNumber();
 						int exitIndex = list.getListEntry((int)(random*(float)(list.size()))).index;
 						csvData[1][i]--;
 						csvData[2][exitIndex]--;
 						events[0][eventsPos] = csvData[0][i];
 						events[1][eventsPos] = csvData[0][exitIndex];
-						try{writer.write(events[0][eventsPos]+","+events[1][eventsPos]+"\r\n");}catch(Exception e){}
+						config.output.writeToMappingFile(events[0][eventsPos]+","+events[1][eventsPos]+"\r\n");
 						eventsPos++;
 						i++;
 					}
@@ -195,12 +183,12 @@ public class Main {
 					totalCarsUsed++;
 			}
 			
-			
-			System.out.println("# EntryTime,ExitTime");
-			for (int i = 0; i < totalCarsUsed; i++) {
-				System.out.println(events[0][i]+","+events[1][i]);
+			if (config.verboseLevel > 0) {
+				System.out.println("# EntryTime,ExitTime");
+				for (int i = 0; i < totalCarsUsed; i++) {
+					System.out.println(events[0][i]+","+events[1][i]);
+				}
 			}
-			
 			
 			carList = new Car[totalCarsUsed];
 			eventList = new EventItem[totalCarsUsed];
@@ -209,31 +197,34 @@ public class Main {
 			// creating the number of cars and events needed
 			for (int i=0; i<totalCarsUsed; i++) {
 				eventList[i] = new EventItem();
-				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad);
+				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, config);
 				eventList[i].setupEvent(carList[i], events[0][i], events[1][i]);
 			}
 			break;
 			
 		default:
-			System.out.println("Please review the settings of the simulation!");
+			System.out.println("Please review the settings of the simulation in the config file!");
 			return;
 		}
 		
+		timeMeasure = System.currentTimeMillis() - timeMeasure;
+		config.output.writeToDebugFile("# Setting up eventItems "+((int)(timeMeasure/60000))+" min "+(((int)(timeMeasure/1000))%60)+" sek.\r\n####################\r\n# Starting simulator!\r\n####################");
 		
 		
 		
 		// create an instance of the simulator itself
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows, resultName);
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows, config);
 		
 		
-		
-//		int imageEveryXTicks = 5;
 		
 		// run the simulator
+		timeMeasure = System.currentTimeMillis();
 		simulator.runSimulator();
+		timeMeasure = System.currentTimeMillis() - timeMeasure;
+		config.output.writeToDebugFile("####################\r\n# Simulation time "+((int)(timeMeasure/60000))+" min "+(((int)(timeMeasure/1000))%60)+" sek.\r\n####################");
 		
-		// do some statistics
-//		evaluateResults();
+		timeTotal = System.currentTimeMillis() - timeTotal;
+		config.output.writeToDebugFile("# Total used time "+((int)(timeTotal/60000))+" min "+(((int)(timeTotal/1000))%60)+" sek.\r\n####################");
 		
 		
 		
@@ -335,38 +326,6 @@ public class Main {
 			}
 			System.out.println();
 			System.out.println();
-		}
-	}
-	
-	
-	private static void writeDownSettings() {
-		try{
-			File results = new File("./"+resultName+"/settings"+resultName+".txt");
-			writer = new BufferedWriter(new FileWriter(results));
-			writer.write("# Settings\r\n");
-			writer.write("Date: "+new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime())+"\r\n");
-			if (simulatorCase == 3 || simulatorCase == 4) {
-				writer.write("Running data from a CSV file.\r\n");
-			} else {
-				String caseName[] = {"best case -unpark always just 1 at a time",
-						"worst case - unpark all cars with the same rank at once, starting with the highest",
-						"random case using poisson distribution with certain probabilities for the parking duration",
-						"round robin test case"};
-				writer.write("Running test data from case "+simulatorCase+" ("+caseName[simulatorCase]+").\r\n");
-				
-			}
-			if (simulatorCase == 2 || simulatorCase == 3 || simulatorCase == 4) {
-				writer.write("Mapping from incoming to outgoing cars where randomized with "+(secureRandom?"secureRandom":"Math.random")+"\r\n");
-				writer.write("Seed: "+randomSeed+"\r\n");
-			}
-			writer.newLine();
-			// Layout information
-			writer.write("A total of "+(kHeight*6*parkingRows)+" parking spots are available.\r\n");
-			writer.write("kHeight = "+kHeight+"\r\n");
-			writer.write("parkingRows = "+parkingRows+"\r\n");
-			writer.write("car length = "+carSize+"\r\n");
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -531,8 +490,8 @@ public class Main {
 	}
 	
 	
-	private static float getRandomNumber(boolean secureRandom) {
-		if (!secureRandom)
+	private static float getRandomNumber() {
+		if (!config.secureRandom)
 			return (float)(mathRandom.nextFloat());
 		mathRandom = new SecureRandom();
 		int test = Math.abs(mathRandom.nextInt());
