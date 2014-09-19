@@ -1,6 +1,7 @@
 import java.security.SecureRandom;
 import java.util.Random;
 
+import cern.jet.random.Exponential;
 import au.com.bytecode.opencsv.CSV;
 import au.com.bytecode.opencsv.CSVReadProc;
 
@@ -15,6 +16,7 @@ public class Main {
 	public static Random mathRandom;
 	private static SecureRandom secRandom;
 	private static Configuration config;
+	private static Exponential exponential;
 	
 	public static int[][] csvData;
 	public static int size;
@@ -98,8 +100,9 @@ public class Main {
 			
 		case 2:
 			/** RANDOM CASE **/
-			System.out.println("Random Case not yet implemented.");
-			return;
+			// for further documentation please see config file
+//			int[] lut1 = { 
+			break;
 			
 		case 3:
 			/** ROUND ROBIN TEST CASE **/
@@ -109,11 +112,6 @@ public class Main {
 			break;
 			
 		case 4:
-//			try{
-//				writer = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/mapping_"+config.resultPostfix+".csv")));
-//				writer.write("# EntryTime,BackOrderTime\r\n");
-//			} catch (Exception e) {e.printStackTrace();}
-			
 			csvData = new int[3][1];
 			size = 0;
 			CSV csv = CSV
@@ -163,12 +161,11 @@ public class Main {
 						}
 					}
 					if (list.size() != 0) {
-						float random = getRandomNumber();
-						int exitIndex = list.getListEntry((int)(random*(float)(list.size()))).index;
+						int exitIndex = list.getListEntry((int)(getRandomNumber()*(float)(list.size()))).index;
 						csvData[1][i]--;
 						csvData[2][exitIndex]--;
-						events[0][eventsPos] = csvData[0][i];
-						events[1][eventsPos] = csvData[0][exitIndex];
+						events[0][eventsPos] = csvData[0][i]+(int)(getRandomNumber()*66.0);
+						events[1][eventsPos] = csvData[0][exitIndex]+(int)(getRandomNumber()*66.0);
 						config.output.writeToMappingFile(events[0][eventsPos]+","+events[1][eventsPos]);
 						eventsPos++;
 						i++;
@@ -578,13 +575,13 @@ public class Main {
 		}
 	}
 	
-	
+	/**
+	 * Random Number Generator
+	 * @return random float with [0,1)
+	 */
 	private static float getRandomNumber() {
 		if (!config.secureRandom)
 			return (float)(mathRandom.nextFloat());
-		mathRandom = new SecureRandom();
-		int test = Math.abs(mathRandom.nextInt());
-		float test2 = (float)(test)/(float)(Integer.MAX_VALUE);
-		return test2;
+		return (float)(Math.abs(mathRandom.nextInt()))/(float)(Integer.MAX_VALUE);
 	}
 }
