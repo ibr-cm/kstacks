@@ -2,9 +2,23 @@ import java.awt.Color;
 
 
 public class Car {
+	/**
+	 * Time, when the car really exits the parking lot. It is measured in ticks
+	 * and is (taking the time the car was backordered into account) essential
+	 * for the evaluation of the given simulation.
+	 */
 	public int exitTime;
 	
+	/**
+	 * This 
+	 */
+	public int startstop;
+	public boolean wasMoving;
+	public int tilesMoved;
+	
 	public int verboseLevel;
+	
+	// public char direction; // D, N, R = Drive, Neutral, Reverse
 	
 	public boolean unparking;
 	
@@ -29,9 +43,8 @@ public class Car {
 	 * count its starts and stops.
 	 */
 	public Street streetAtLastTick;
-	public int startstop;
-	public boolean wasMoving;
-	public int tilesMoved;
+	
+	public Street lane;
 	
 	public EventItem eventItem;
 	
@@ -64,7 +77,7 @@ public class Car {
 		this.currentStreet = null;
 		this.drivingTarget = null;
 		this.streetAtLastTick = null;
-		this.wasMoving = false;
+		this.wasMoving = true;
 		this.startstop = 0;
 		this.tilesMoved = 0;
 		this.eventItem = eventItem;
@@ -191,6 +204,21 @@ public class Car {
 			if (this.drivingTarget[0] != null && this.currentStreet == drivingTarget[0].street) {
 				
 				debugOutput("drive: drivingTarget of car "+this+" reached",2);
+				
+				// If the car is reversing and driving forward right after that
+				// the car will stop and then drive in another direction. This
+				// could be counted as a stopping process.
+				// TODO: PUT config.stopAtUnparking INTO CONFIGURATION
+				if (config.stopAtUnparking) {
+					if (this.drivingTarget[0].direction == 'R' && this.drivingTarget[1].direction == 'D') {
+						// Now the car stopped and will be driving forward
+						// afterwards. This also cathes the case, when a car is
+						// blocked right after unparking from its stack.
+						this.wasMoving = false;
+						this.startstop++;
+					}
+				}
+				
 				// if the driving target wants to unlock a stack e.g. after the last car is back in the stack
 				// after unparking a car
 				if (drivingTarget[0].unlockKStackForParking != null) {
@@ -243,6 +271,7 @@ public class Car {
 				debugOutput("drive: drivingTarget now: "+drivingTarget,2);
 			}
 		}
+		return true;
 	}
 	
 	
@@ -321,7 +350,10 @@ public class Car {
 	 * events occur interleaving.
 	 */
 	public void checkForStartsStops() {
-		if (this.currentStreet != null && this.isInParkingLot && ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving))) {
+		// if one of these three condition apply there is nothing to check for
+		if (this.drivingTarget == null || this.isInParkingLot || this.currentStreet == null)
+			return;
+		if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
 			this.startstop++;
 			this.wasMoving = !this.wasMoving;
 			this.lastCurrentStreet = this.currentStreet;

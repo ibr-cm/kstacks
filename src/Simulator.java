@@ -311,7 +311,7 @@ public class Simulator {
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
 			boolean spawnBlocked = false, freeAvailableKStack = false;
-			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || (kHeight*carSize>2?spawn.prev1.car != null:false)) {
+			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false)) {
 				debugOutput("spawnCar: Cannot spawn since spawn is blocked!",2);
 				spawnBlocked = true;
 			}
