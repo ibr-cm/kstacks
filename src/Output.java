@@ -84,7 +84,7 @@ public class Output {
 	 * @param priority has to be less or equal to verbose level to get printed
 	 */
 	public void consoleOutput(String text, int priority, int tick) {
-		if (priority <= config.verboseLevel && config.debugPeriodStart == -1 && config.debugPeriodStop == -1 || (config.debugPeriodStart<=tick && config.debugPeriodStop>=tick && config.debugPersionVerbose>=priority)) {
+		if (priority <= config.verboseLevel && config.debugPeriodStart == -1 && config.debugPeriodStop == -1 || (config.debugPeriodStart<=tick && config.debugPeriodStop>=tick && config.debugPeriodVerbose>=priority)) {
 			System.out.println(text);
 		}
 	}
@@ -278,7 +278,7 @@ public class Output {
 			
 		
 		// paint cars in the middle kstacks
-		for (int i = 0; i < (kstack.length/3); i++) {
+		for (int i = 0; i < kstack.length; i++) {
 			y = (Y/2);
 			x = config.carSize*config.kHeight+1;
 			tempStreet1 = spawn.next1;
@@ -320,7 +320,7 @@ l2:			while (tempStreet1 != crossroad) {
 		}
 		
 		// paint cars in the top kstacks
-		for (int i = kstack.length/3; i < 2*(kstack.length/3); i++) {
+		for (int i = 0; i < kstack.length; i++) {
 			y = config.carSize*config.kHeight;
 			x = config.carSize*config.kHeight+1;
 			tempStreet1 = spawn.next2;
@@ -364,7 +364,7 @@ l2:			while (tempStreet1 != crossroad) {
 		}
 		
 		// paint cars in the bottom kstacks
-		for (int i = 2*(kstack.length/3); i < kstack.length; i++) {
+		for (int i = 0; i < kstack.length; i++) {
 			y = Y-(config.carSize*config.kHeight)-1;
 			x = this.config.carSize*this.config.kHeight+1;
 			tempStreet1 = spawn.next3;

@@ -169,7 +169,7 @@ public class Main {
 						csvData[2][exitIndex]--;
 						events[0][eventsPos] = csvData[0][i];
 						events[1][eventsPos] = csvData[0][exitIndex];
-						config.output.writeToMappingFile(events[0][eventsPos]+","+events[1][eventsPos]+"\r\n");
+						config.output.writeToMappingFile(events[0][eventsPos]+","+events[1][eventsPos]);
 						eventsPos++;
 						i++;
 					}
@@ -314,21 +314,6 @@ public class Main {
 		}
 	}
 	
-	public static void printKStacks(KStack[] kstacks, int carSize, int kHeight) {
-		for (int i=0; i<kstacks.length; i++) {
-			System.out.println(i);
-			Street tempStreet1 = kstacks[i];
-			System.out.println(tempStreet1.prev1);
-			System.out.println(tempStreet1);
-			for (int j=0; j<carSize*kHeight-1; j++) {
-				tempStreet1 = tempStreet1.next1;
-				System.out.println(tempStreet1);
-			}
-			System.out.println();
-			System.out.println();
-		}
-	}
-	
 	
 	private static void setupMap() {
 		Street tempStreet1 = new Street(), tempStreet2 = new Street(); // piece of street to work with
@@ -419,57 +404,167 @@ public class Main {
 		}
 		
 		
-		
-		/**
-		 * append kstacks to correct streets
-		 * first 1/3 kstack is connected to top lane
-		 * second 1/3 is connected to middle lane
-		 * last 1/3 is connected to bottom lane
-		 * 
-		 * the first stack is also closest to the exit
-		 */ 
-		
-		// mid lane
+		// three temporary streets are necessary to assign the kstacks
 		tempStreet1 = spawn.next1;
-		for (int i=parkingRows-1; i>=0; i--) {
-			tempStreet1.kstack1 = kstacks[2*i  ];
-			tempStreet1.kstack2 = kstacks[2*i+1];
-			kstacks[2*i  ].lane = spawn.next1;
-			kstacks[2*i+1].lane = spawn.next1;
-			tempStreet1.kstack1.prev1 = tempStreet1;
-			tempStreet1.kstack2.prev1 = tempStreet1;
-			tempStreet1 = tempStreet1.next1;
+		tempStreet2 = spawn.next2;
+		Street tempStreet3 = spawn.next3;
+		
+		switch(config.parkingLotLayout) {
+		
+		case 0:
+			/**
+			 * append kstacks to correct streets
+			 * first 1/3 kstack is connected to top lane
+			 * second 1/3 is connected to middle lane
+			 * last 1/3 is connected to bottom lane
+			 * 
+			 * the first stack is also closest to the entry
+			 */ 			
+			for (int i=0; i<2*kHeight*carSize+1; i++) {
+				tempStreet2 = tempStreet2.next1;
+				tempStreet3 = tempStreet3.next1;
+			}
+			for (int i=0; i<config.parkingRows; i++) {
+				tempStreet1.kstack1 = kstacks[2*i  ];
+				tempStreet1.kstack2 = kstacks[2*i+1];
+				kstacks[2*i  ].lane = spawn.next1;
+				kstacks[2*i+1].lane = spawn.next1;
+				tempStreet1.kstack1.prev1 = tempStreet1;
+				tempStreet1.kstack2.prev1 = tempStreet1;
+				tempStreet1 = tempStreet1.next1;
+				
+				tempStreet2.kstack1 = kstacks[2*i   +2*parkingRows];
+				tempStreet2.kstack2 = kstacks[2*i+1 +2*parkingRows];
+				kstacks[2*i   +2*parkingRows].lane = spawn.next2;
+				kstacks[2*i+1 +2*parkingRows].lane = spawn.next2;
+				tempStreet2.kstack1.prev1 = tempStreet2;
+				tempStreet2.kstack2.prev1 = tempStreet2;
+				tempStreet2 = tempStreet2.next1;
+				
+				tempStreet3.kstack1 = kstacks[2*i   +4*parkingRows];
+				tempStreet3.kstack2 = kstacks[2*i+1 +4*parkingRows];
+				kstacks[2*i   +4*parkingRows].lane = spawn.next3;
+				kstacks[2*i+1 +4*parkingRows].lane = spawn.next3;
+				tempStreet3.kstack1.prev1 = tempStreet3;
+				tempStreet3.kstack2.prev1 = tempStreet3;
+				tempStreet3 = tempStreet3.next1;
+			}
+			break;
+			
+			
+			
+			
+		case 1:
+			/**
+			 * append kstacks to correct streets
+			 * first 1/3 kstack is connected to top lane
+			 * second 1/3 is connected to middle lane
+			 * last 1/3 is connected to bottom lane
+			 * 
+			 * the first stack is also closest to the exit
+			 */
+			for (int i=0; i<2*kHeight*carSize+1; i++) {
+				tempStreet2 = tempStreet2.next1;
+				tempStreet3 = tempStreet3.next1;
+			}
+			for (int i=parkingRows-1; i>=0; i--) {
+				tempStreet1.kstack1 = kstacks[2*i  ];
+				tempStreet1.kstack2 = kstacks[2*i+1];
+				kstacks[2*i  ].lane = spawn.next1;
+				kstacks[2*i+1].lane = spawn.next1;
+				tempStreet1.kstack1.prev1 = tempStreet1;
+				tempStreet1.kstack2.prev1 = tempStreet1;
+				tempStreet1 = tempStreet1.next1;
+				
+				tempStreet2.kstack1 = kstacks[2*i   +2*parkingRows];
+				tempStreet2.kstack2 = kstacks[2*i+1 +2*parkingRows];
+				kstacks[2*i   +2*parkingRows].lane = spawn.next2;
+				kstacks[2*i+1 +2*parkingRows].lane = spawn.next2;
+				tempStreet2.kstack1.prev1 = tempStreet2;
+				tempStreet2.kstack2.prev1 = tempStreet2;
+				tempStreet2 = tempStreet2.next1;
+				
+				tempStreet3.kstack1 = kstacks[2*i   +4*parkingRows];
+				tempStreet3.kstack2 = kstacks[2*i+1 +4*parkingRows];
+				kstacks[2*i   +4*parkingRows].lane = spawn.next3;
+				kstacks[2*i+1 +4*parkingRows].lane = spawn.next3;
+				tempStreet3.kstack1.prev1 = tempStreet3;
+				tempStreet3.kstack2.prev1 = tempStreet3;
+				tempStreet3 = tempStreet3.next1;
+			}
+
+			break;
+			
+			
+			
+			
+			
+			
+		case 2:
+			tempStreet1 = crossroad.prev1;
+			tempStreet2 = crossroad.prev2;
+			tempStreet3 = crossroad.prev3;
+			int counter = 0, step = 0;
+			while(counter < config.parkingRows*6) {
+				if (tempStreet1 != spawn) {
+					tempStreet1.kstack1 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet1;
+					kstacks[counter].lane = spawn.next1;
+					System.out.println("assigned stack "+counter+" to a kstack1 on lane 1");
+					counter++;
+					tempStreet1.kstack2 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet1;
+					kstacks[counter].lane = spawn.next1;
+					System.out.println("assigned stack "+counter+" to a kstack2 on lane 1");
+					counter++;
+				}
+				
+//				System.out.println(config.kHeight);
+				
+				if (step >= (2*config.kHeight*config.carSize)+2) {
+					tempStreet2.kstack1 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet2;
+					kstacks[counter].lane = spawn.next2;
+					System.out.println("assigned stack "+counter+" to a kstack1 on lane 2");
+					counter++;
+					tempStreet2.kstack2 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet2;
+					kstacks[counter].lane = spawn.next2;
+					System.out.println("assigned stack "+counter+" to a kstack2 on lane 2");
+					counter++;
+					tempStreet3.kstack1 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet3;
+					kstacks[counter].lane = spawn.next3;
+					System.out.println("assigned stack "+counter+" to a kstack1 on lane 3");
+					counter++;
+					tempStreet3.kstack2 = kstacks[counter];
+					kstacks[counter].prev1 = tempStreet3;
+					kstacks[counter].lane = spawn.next3;
+					System.out.println("assigned stack "+counter+" to a kstack1 on lane 3");
+					counter++;
+				}
+				
+				if (tempStreet1 != spawn)
+					tempStreet1 = tempStreet1.prev1;
+				tempStreet2 = tempStreet2.prev1;
+				tempStreet3 = tempStreet3.prev1;
+				
+				step++;
+			}
+			break;
+			
+			
+			
+			
+			
+		default:
+			System.out.println("Please review the used Configuration. The setting for the layout of the parking does not seem correct.");
+			System.exit(1);
+			break;
+		
 		}
 		
-		// top lane
-		tempStreet1 = spawn.next2;
-		for (int i=0; i<2*kHeight*carSize+1; i++) {
-			tempStreet1 = tempStreet1.next1;
-		}
-		for (int i=parkingRows-1; i>=0; i--) {
-			tempStreet1.kstack1 = kstacks[2*i   +2*parkingRows];
-			tempStreet1.kstack2 = kstacks[2*i+1 +2*parkingRows];
-			kstacks[2*i   +2*parkingRows].lane = spawn.next2;
-			kstacks[2*i+1 +2*parkingRows].lane = spawn.next2;
-			tempStreet1.kstack1.prev1 = tempStreet1;
-			tempStreet1.kstack2.prev1 = tempStreet1;
-			tempStreet1 = tempStreet1.next1;
-		}
 		
-		// bottom lane
-		tempStreet1 = spawn.next3;
-		for (int i=0; i<2*kHeight*carSize+1; i++) {
-			tempStreet1 = tempStreet1.next1;
-		}
-		for (int i=parkingRows-1; i>=0; i--) {
-			tempStreet1.kstack1 = kstacks[2*i   +4*parkingRows];
-			tempStreet1.kstack2 = kstacks[2*i+1 +4*parkingRows];
-			kstacks[2*i   +4*parkingRows].lane = spawn.next3;
-			kstacks[2*i+1 +4*parkingRows].lane = spawn.next3;
-			tempStreet1.kstack1.prev1 = tempStreet1;
-			tempStreet1.kstack2.prev1 = tempStreet1;
-			tempStreet1 = tempStreet1.next1;
-		}
 		
 		
 		

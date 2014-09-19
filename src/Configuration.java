@@ -52,7 +52,7 @@ public class Configuration {
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
 	 * 5: TODO use a plain CSV
 	 */
-	public final int simulatorCase = 4;
+	public final int simulatorCase = 3;
 	
 	
 	/**
@@ -90,6 +90,29 @@ public class Configuration {
 	
 	
 	/**
+	 * This sets the way the stacks are assigned to streets within the layout.
+	 * There are several different ways to assign stacks to streets:
+	 * 0: simple layout - Starting near the entrance and assigning the first
+	 *    third of stacks to the streets in the middle lane. The next third is
+	 *    assigned to streets which are reachable by using next2 from spawn.
+	 *    The last third is assigned to the remaining streets. The stack with
+	 *    the lowest id is closest to the spawn. The id does also not always
+	 *    give information about the position in the layout. Stack 17 might be
+	 *    closer to the spawn or despawn than stack 42.
+	 * 1: mirrored layout - This layout is basically a mirrored version of the
+	 *    simple layout. Since the simulator fills the stacks starting with
+	 *    stack 0. Now the cars park closer to the despawn but still the id
+	 *    does not necessarily informs about the position in the layout.
+	 * 2: radius layout - This layout ensures that stacks with lower ids are
+	 *    closer to the despawn (to minimize the difference between the time
+	 *    the cars get ordered back and the time they actually exit the parking
+	 *    lot). So stack 17 might be closer to despawn than stack 42 but it is
+	 *    certainly -NOT- further away.
+	 */
+	public final int parkingLotLayout = 2;
+	
+	
+	/**
 	 * Here the layout of the parking lot is defined.
 	 * The number parking spaces has to be a multiple of 6 times the height of
 	 * the stacks because the number of the stacks is calculated.
@@ -97,7 +120,7 @@ public class Configuration {
 	 * which has to be driven by cars inside the parking lot. That means
 	 * everything gets bigger.
 	 */
-	public final int noOfParkingSpaces = 1440;
+	public final int noOfParkingSpaces = 96;
 	public final int kHeight = 1;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
@@ -155,7 +178,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 0;
+	public final int visualOutput = 5;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given
@@ -218,7 +241,7 @@ public class Configuration {
 	public final int debugPeriodStop = -1;
 	public final boolean debugBreakAfter = false; 
 	public final int debugPeriodVisual = 0;
-	public final int debugPersionVerbose = 0;
+	public final int debugPeriodVerbose = 0;
 	
 	
 	
