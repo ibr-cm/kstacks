@@ -510,12 +510,10 @@ public class Main {
 					tempStreet1.kstack1 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet1;
 					kstacks[counter].lane = spawn.next1;
-					System.out.println("assigned stack "+counter+" to a kstack1 on lane 1");
 					counter++;
 					tempStreet1.kstack2 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet1;
 					kstacks[counter].lane = spawn.next1;
-					System.out.println("assigned stack "+counter+" to a kstack2 on lane 1");
 					counter++;
 				}
 				
@@ -525,22 +523,18 @@ public class Main {
 					tempStreet2.kstack1 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet2;
 					kstacks[counter].lane = spawn.next2;
-					System.out.println("assigned stack "+counter+" to a kstack1 on lane 2");
 					counter++;
 					tempStreet2.kstack2 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet2;
 					kstacks[counter].lane = spawn.next2;
-					System.out.println("assigned stack "+counter+" to a kstack2 on lane 2");
 					counter++;
 					tempStreet3.kstack1 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet3;
 					kstacks[counter].lane = spawn.next3;
-					System.out.println("assigned stack "+counter+" to a kstack1 on lane 3");
 					counter++;
 					tempStreet3.kstack2 = kstacks[counter];
 					kstacks[counter].prev1 = tempStreet3;
 					kstacks[counter].lane = spawn.next3;
-					System.out.println("assigned stack "+counter+" to a kstack1 on lane 3");
 					counter++;
 				}
 				
