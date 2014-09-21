@@ -2,6 +2,7 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 import cern.jet.random.Exponential;
+import cern.jet.random.engine.RandomEngine;
 import au.com.bytecode.opencsv.CSV;
 import au.com.bytecode.opencsv.CSVReadProc;
 
@@ -100,8 +101,27 @@ public class Main {
 			
 		case 2:
 			/** RANDOM CASE **/
+			System.out.println("Random Case!");
 			// for further documentation please see config file
-//			int[] lut1 = { 
+			//            7-9, 9-10 10-11 11-12 12-13 13-14 14-15 15-16 16-17 17-18 18-19 19-20 20-21
+			int[] lut1 = {58, 444, 630,  474,  382,  388,  430,  424,  393,  305,  231,  165,  70};
+			Exponential exp = new Exponential(lut1[2], new RandomEngine() {
+				public int nextInt() {
+					double checkMath = 0, checkSecure = 0;
+					
+					for (int i = 0; i < 1000000; i++) {
+						checkMath += (Math.random()*2)-1;
+						checkSecure += ((double)(secRandom.nextInt())/Integer.MAX_VALUE);
+					}
+					
+					checkMath /= 1000000;
+					checkSecure /= 1000000;
+					System.out.println(checkMath+" -- "+checkSecure);
+					return 2;
+				}
+			});
+			double test = exp.nextDouble();
+			System.exit(0);
 			break;
 			
 		case 3:
