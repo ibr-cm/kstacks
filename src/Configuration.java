@@ -33,7 +33,12 @@ public class Configuration {
 	public final int verboseLevel = 0;
 	
 	
-	
+	/**
+	 * If this variable is set to TRUE there will be no files as output. This
+	 * is only meant for debugging where all output will be printed into the
+	 * console.
+	 */
+	public final boolean prohibitFileOutput = true;
 	
 	
 	/** CONFIGURATION FOR MAIN **/
@@ -45,14 +50,14 @@ public class Configuration {
 	 * 1: worst case (unpark all cars with the same rank at once, starting with
 	 *    the highest)
 	 * 2: random case using poisson distribution with certain probabilities for
-	 *    the parking duration
+	 *    the parking duration - PLEASE SEE ADDITIONAL OPTIONS BELOW
 	 * 3: round robin test case
 	 * 4: This setting is for csv files where only aggregated incoming cars and
 	 *    outgoing cars are assigned to specific points in time (ticks). E.g.:
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
-	 * 5: TODO use a plain CSV
+	 * 5: use a plain CSV
 	 */
-	public final int simulatorCase = 2;
+	public final int simulatorCase = 5;
 	
 	
 	/**
@@ -71,7 +76,7 @@ public class Configuration {
 	 * variable randomSeed. When using Math.random (secureRandom = false) the
 	 * results are the same per run (on same data) when using the same seed.
 	 */
-	public final boolean secureRandom = true;
+	public final boolean secureRandom = false;
 	public final int randomSeed = 1001;
 	
 	
@@ -108,6 +113,8 @@ public class Configuration {
 	 *    the cars get ordered back and the time they actually exit the parking
 	 *    lot). So stack 17 might be closer to despawn than stack 42 but it is
 	 *    certainly -NOT- further away.
+	 *    
+	 *    DEFAULT: public final int parkingLotLayout = 2;
 	 */
 	public final int parkingLotLayout = 2;
 	
@@ -120,10 +127,28 @@ public class Configuration {
 	 * which has to be driven by cars inside the parking lot. That means
 	 * everything gets bigger.
 	 */
-	public final int noOfParkingSpaces = 96;
-	public final int kHeight = 1;
+	public final int noOfParkingSpaces = 1440;
+	public final int kHeight = 8;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
+	
+	
+	/**
+	 * Additional Options for the random case:
+	 * The minimum parking duration is necessary to make cars stay in the
+	 * parking lot for a certain time at least. The algorithm using creating
+	 * the parking time generates a new parking duration until this condition
+	 * is met. To avoid values that are not possible to comply with this is
+	 * limited to a maximum of 60 minutes. That means all parking durations
+	 * would be a full hour.
+	 * 
+	 * The default number of cars used for the random case are calculated as
+	 * follows: In a realistic parking lot with 1250 spots a total number of
+	 * 3928 cars were used in the time for 10 hours (8am - 6pm). Since there 
+	 * are a different number of spots available here this has to be adjusted.
+	 */
+	public final int minParkDuration = 15;
+	public final int noOfCarsForRandomCase = (int)(((double)(3928)*noOfParkingSpaces)/1250);// -DO NOT TOUCH-
 	
 	
 	/**
@@ -178,7 +203,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 5;
+	public final int visualOutput = 2;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given

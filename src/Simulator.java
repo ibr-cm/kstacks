@@ -782,6 +782,9 @@ l4:						while (tempStreet1.car != null) {
 		String result = stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop;
 		config.output.consoleOutput(result,1, tick);
 		config.output.writeToResultFile(result);
+		config.output.writeToBackOrderTime((stats[4]-stats[2]));
+		config.output.writeToTilesMoved(item.getCar().tilesMoved);
+		config.output.writeToStartStop(item.getCar().startstop);
 	}
 	
 }

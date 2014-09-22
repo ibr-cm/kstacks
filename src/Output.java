@@ -19,6 +19,9 @@ public class Output {
 	private BufferedWriter debugWriter;
 	private BufferedWriter mappingWriter;
 	private BufferedWriter configWriter;
+	private BufferedWriter backOrderWriter;
+	private BufferedWriter tilesMovedWriter;
+	private BufferedWriter startstopWriter;
 	private Configuration config;
 	
 	/**
@@ -27,6 +30,10 @@ public class Output {
 	 * location where all results are saved
 	 */
 	public Output(Configuration config) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
 		this.config = config;
 		
 		// create the new folder where all the data goes
@@ -41,8 +48,20 @@ public class Output {
 		} catch (Exception e) {System.out.println("Could not create debugWriter.");}
 		
 		try{
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/mapping_"+config.resultPostfix+".txt"),true));
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/mapping_"+config.resultPostfix+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create mappingWriter.");}
+		
+		try{
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+		} catch (Exception e) {System.out.println("Could not create backOrderWriter.");}
+		
+		try{
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+		} catch (Exception e) {System.out.println("Could not create tilesMovedWriter.");}
+		
+		try{
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
+		} catch (Exception e) {System.out.println("Could not create startstopWriter.");}
 	}
 	
 	
@@ -50,6 +69,10 @@ public class Output {
 	
 	
 	public void writeToResultFile(String text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
 		try {
 			resultWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/results_"+config.resultPostfix+".csv"),true));
 			resultWriter.write(text+"\r\n");
@@ -59,6 +82,10 @@ public class Output {
 	
 	
 	public void writeToDebugFile(String text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
 		try {
 			debugWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/debug_"+config.resultPostfix+".txt"),true));
 			debugWriter.write(text+"\r\n");
@@ -66,10 +93,50 @@ public class Output {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	
 	public void writeToMappingFile(String text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
 		try {
 			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/mapping_"+config.resultPostfix+".txt"),true));
+			mappingWriter.write(text+"\r\n");
+			mappingWriter.close();
+		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	
+	public void writeToBackOrderTime(int text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
+		try {
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+			mappingWriter.write(text+"\r\n");
+			mappingWriter.close();
+		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	public void writeToTilesMoved(int text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
+		try {
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+			mappingWriter.write(text+"\r\n");
+			mappingWriter.close();
+		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	public void writeToStartStop(int text) {
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
+		try {
+			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
 			mappingWriter.write(text+"\r\n");
 			mappingWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
@@ -84,13 +151,16 @@ public class Output {
 	 * @param priority has to be less or equal to verbose level to get printed
 	 */
 	public void consoleOutput(String text, int priority, int tick) {
-		if (priority <= config.verboseLevel && config.debugPeriodStart == -1 && config.debugPeriodStop == -1 || (config.debugPeriodStart<=tick && config.debugPeriodStop>=tick && config.debugPeriodVerbose>=priority)) {
+		if (!config.prohibitFileOutput && priority <= config.verboseLevel && config.debugPeriodStart == -1 && config.debugPeriodStop == -1 || (config.debugPeriodStart<=tick && config.debugPeriodStop>=tick && config.debugPeriodVerbose>=priority)) {
 			System.out.println(text);
 		}
 	}
 	
 	
 	public void writeDownSettings() {
+		
+//		if (config.prohibitFileOutput)
+//			return;
 		
 		try{
 			configWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/config_"+config.resultPostfix+".txt"),true));
@@ -130,6 +200,10 @@ public class Output {
 	
 
 	public void generateImage(KStack[] kstack, Spawn spawn, Crossroad crossroad, int tick) throws Exception{
+		
+//		if (config.prohibitFileOutput)
+//			return;
+		
 		int X = 2+config.parkingRows+config.carSize+config.carSize*config.kHeight, Y = (6*config.carSize*config.kHeight)+3;
 		int x =0, y = 0, PIX_SIZE = 16;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
