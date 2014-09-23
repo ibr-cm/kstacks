@@ -57,7 +57,7 @@ public class Configuration {
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
 	 * 5: use a plain CSV
 	 */
-	public final int simulatorCase = 5;
+	public final int simulatorCase = 2;
 	
 	
 	/**

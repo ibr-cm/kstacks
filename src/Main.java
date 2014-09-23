@@ -4,6 +4,7 @@ import java.util.Random;
 import cern.jet.random.Binomial;
 import cern.jet.random.Exponential;
 import cern.jet.random.NegativeBinomial;
+import cern.jet.random.Poisson;
 import cern.jet.random.engine.RandomEngine;
 import au.com.bytecode.opencsv.CSV;
 import au.com.bytecode.opencsv.CSVReadProc;
@@ -115,6 +116,14 @@ public class Main {
 					return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
 				}
 			});
+			
+			int[] counter = {0,0,0,0,0,0,0,0,0,0,0};
+			
+			for (int i = 0; i < 1000; i++)
+				counter[nextPoissonValue()]++;
+			for (int i = 0; i < 11; i++)
+				System.out.println(i+" "+counter[i]);
+			System.exit(0);
 			
 //			System.out.println("Random Case!\r\nUsing "+config.noOfCarsForRandomCase+" Cars.");
 //			// for further documentation please see config file
@@ -308,13 +317,26 @@ public class Main {
 		
 	}
 	
+	private static int nextPoissonValue() {
+		Poisson pois = new Poisson(3.5, new RandomEngine() {
+			
+			@Override
+			public int nextInt() {
+				if (config.secureRandom)
+					secRandom.nextInt();
+				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
+			}
+		});
+		return pois.nextInt();
+	}
+	
 	private static int nextInterarrivalTime(int time) {
 		//           (7)8-9, 9-10 10-11 11-12 12-13 13-14 14-15 15-16 16-17 17-18 //18-19 19-20 20-21
 		int[] lutArr = {58,  444, 630,  474,  382,  388,  430,  424,  393,  305}; //231,  165,  70};
 		for (int i = 0; i < lutArr.length; i++) {
 			lutArr[i] = (int)(((double)lutArr[i]*config.noOfParkingSpaces)/1250);
 		}
-		Exponential exp = new Exponential(lutArr[time], new RandomEngine() {
+		Exponential exp = new Exponential(3.5, new RandomEngine() {
 			public int nextInt() {
 				if (config.secureRandom)
 					return secRandom.nextInt();
