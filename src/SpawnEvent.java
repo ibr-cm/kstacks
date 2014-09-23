@@ -31,4 +31,10 @@ public class SpawnEvent {
 			tempSpawnEvent = tempSpawnEvent.next;
 		tempSpawnEvent.next = new SpawnEvent(eventItem);
 	}
+	
+	public int length() {
+		if (next == null)
+			return 1;
+		return 1+next.length();
+	}
 }

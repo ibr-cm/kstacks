@@ -129,8 +129,8 @@ public class Simulator {
 			
 			if (config.debugPeriodStop != 0 && tick == config.debugPeriodStop && config.debugBreakAfter)
 				return;
-			
-			
+			if ((tick%1000)==500)
+				System.out.println(tick);
 			config.output.consoleOutput("=============================================================",2,tick);
 			config.output.consoleOutput("Tick: "+tick,2,tick);
 			config.output.consoleOutput("=============================================================",2,tick);
@@ -254,9 +254,10 @@ public class Simulator {
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
 			boolean spawnBlocked = false, freeAvailableKStack = false;
-			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false || findSmallestStack() == -1)) {
+			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || findSmallestStack() == -1) {
 				config.output.consoleOutput("spawnCar: Cannot spawn since spawn is blocked!",2,tick);
 				spawnBlocked = true;
+				
 			}
 			for (int i=0; i<kstack.length; i++) {
 				if (!kstack[i].lockedForParking)
@@ -264,6 +265,7 @@ public class Simulator {
 			}
 			
 			config.output.consoleOutput("spawnCar: Spawn was "+(spawnBlocked?"":"not ")+"blocked.",2,tick);
+				
 			
 			// if the spawn is not blocked the will be spawned
 			if (!spawnBlocked && freeAvailableKStack) {
@@ -364,7 +366,23 @@ public class Simulator {
 	private void checkForUnparkingEvents() {
 		// Create a new UnparkEvent for every car that wants to unpark.
 		for (int i=0; i<eventList.length; i++) {
-			if (eventList[i].getBackOrderTime() + eventList[i].getBackOrderDelay() == tick) {
+			if (eventList[i].getBackOrderTime() + eventList[i].getBackOrderDelay() == tick && !eventList[i].isFulfilled()) {
+				if (eventList[i].getCar().kstack == null) {
+					System.out.println("car was backordered though not yet parked");
+					System.out.println("car    "+eventList[i].getCar());
+					System.out.println("entry  "+eventList[i].getEntryTime());
+					System.out.println("entryD "+eventList[i].getEntryDelay());
+					System.out.println("exit   "+eventList[i].getBackOrderTime());
+					System.out.println("exitD  "+eventList[i].getBackOrderDelay());
+					System.out.println("street "+eventList[i].getCar().currentStreet);
+					System.out.println("exit   "+eventList[i].getExitTime());
+					System.out.println(tick);
+					if (this.spawnList != null)
+						System.out.println(this.spawnList.length());
+					else
+						System.out.println("spawnList is null");
+					System.exit(0);
+				}
 				if (eventList[i].getCar().kstack.lockedForUnparking || eventList[i].getCar().kstack.lockedForParking || eventList[i].getCar().drivingTarget != null) {
 					config.output.consoleOutput("==========",2,tick);
 					eventList[i].increaseBackOrderDelay();

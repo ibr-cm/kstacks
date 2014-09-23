@@ -22,6 +22,7 @@ public class Output {
 	private BufferedWriter backOrderWriter;
 	private BufferedWriter tilesMovedWriter;
 	private BufferedWriter startstopWriter;
+	private BufferedWriter demoWriter;
 	private Configuration config;
 	
 	/**
@@ -130,7 +131,7 @@ public class Output {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public void writeToStartStop(int text) {
+public void writeToStartStop(int text) {
 		
 //		if (config.prohibitFileOutput)
 //			return;
@@ -141,6 +142,20 @@ public class Output {
 			mappingWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}
+	
+	public void writeDemoFile(String name, String text) {
+		
+	//	if (config.prohibitFileOutput)
+	//		return;
+		
+		try {
+			demoWriter = new BufferedWriter(new FileWriter(new File("./"+name),true));
+			demoWriter.write(text);
+			demoWriter.close();
+		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+
 	
 	
 	/**

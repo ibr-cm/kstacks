@@ -57,7 +57,7 @@ public class Configuration {
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
 	 * 5: use a plain CSV
 	 */
-	public final int simulatorCase = 2;
+	public final int simulatorCase = 5;
 	
 	
 	/**
@@ -76,7 +76,7 @@ public class Configuration {
 	 * variable randomSeed. When using Math.random (secureRandom = false) the
 	 * results are the same per run (on same data) when using the same seed.
 	 */
-	public final boolean secureRandom = false;
+	public final boolean secureRandom = true;
 	public final int randomSeed = 1001;
 	
 	
@@ -128,7 +128,7 @@ public class Configuration {
 	 * everything gets bigger.
 	 */
 	public final int noOfParkingSpaces = 1440;
-	public final int kHeight = 8;
+	public final int kHeight = 6;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
@@ -148,7 +148,6 @@ public class Configuration {
 	 * are a different number of spots available here this has to be adjusted.
 	 */
 	public final int minParkDuration = 15;
-	public final int noOfCarsForRandomCase = (int)(((double)(3928)*noOfParkingSpaces)/1250);// -DO NOT TOUCH-
 	
 	
 	/**
@@ -203,7 +202,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 2;
+	public final int visualOutput = 50;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given

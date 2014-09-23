@@ -58,6 +58,7 @@ public class EventItem {
 	public int getBackOrderDelay() {return this.backOrderDelay;}
 	public Car getCar() {return this.car;}
 	public int getEntryTime() {return this.entryTime;}
+	public int getEntryDelay() {return this.entryDelay;}
 	public int getExitTime() {return this.exitTime;}
 	public int[] getEventStats() {
 		int[] stats = {entryTime, entryDelay, backOrderTime, backOrderDelay, exitTime};

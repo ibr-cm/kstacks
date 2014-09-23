@@ -26,6 +26,11 @@ public class Main {
 	public static int size;
 	
 	
+	
+	
+	private static SecureRandom secRandom2 = new SecureRandom();
+	
+	
 	public static void main(String args[]) {
 		
 		long timeTotal = System.currentTimeMillis();
@@ -103,66 +108,29 @@ public class Main {
 			break;
 			
 		case 2:
+			
 			/** RANDOM CASE **/
 			double lambdaSpawn = 3.5;
 			double[][] lutDep = {{0.96,3}, {0.95,3}, {0.93,4}, {0.9,6}, {0.87,6}, {0.98,6}, {0.89,6}, {0.9,5}, {0.94,4}, {0.98,4}};
+			int[][] matching = new int[0][2];
 			
-			Exponential exp = new Exponential(lambdaSpawn, new RandomEngine() {
-				
-				@Override
-				public int nextInt() {
-					if (config.secureRandom)
-						secRandom.nextInt();
-					return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
-				}
-			});
+			while(!isEnoughCars(matching)) {
+				if((matching.length%1000)==0)
+					System.out.println(matching.length);
+				int arrivalTime = nextArrivalTime(); 
+//				System.out.println("arrivalTime: "+arrivalTime);
+				matching = addANewCar(matching, arrivalTime, nextParkDuration((int)(arrivalTime/4000)));
+			}
 			
-			int[] counter = {0,0,0,0,0,0,0,0,0,0,0};
+			for (int i = 0; i < matching.length; i++) { 
+				config.output.writeDemoFile("random_demo_data.csv",matching[i][0]+","+matching[i][1]+"\r\n");
+			}
 			
-			for (int i = 0; i < 1000; i++)
-				counter[nextPoissonValue()]++;
-			for (int i = 0; i < 11; i++)
-				System.out.println(i+" "+counter[i]);
+			
+			
+			System.out.println(matching.length);
+			
 			System.exit(0);
-			
-//			System.out.println("Random Case!\r\nUsing "+config.noOfCarsForRandomCase+" Cars.");
-//			// for further documentation please see config file
-//			
-//			// temporary lists with the maximum of entries that are possible
-//			Car[] carListTemp = new Car[config.noOfCarsForRandomCase];
-//			EventItem[] eventListTemp = new EventItem[config.noOfCarsForRandomCase];
-//
-//			int counter = 0, realNoOfCarsForRandomCase = 0;
-//			for (int i = 0; i < config.noOfCarsForRandomCase; i++) {
-//				int nextArrival = counter+nextInterarrivalTime(counter/4000);
-//				if ((nextArrival/4000) < 10) {
-//					eventListTemp[i] = new EventItem();
-//					carListTemp[i] = new Car(carSize, eventListTemp[i], spawn, despawn, crossroad, config);
-//					eventListTemp[i].setupEvent(carListTemp[i], nextArrival, nextArrival + nextParkDuration(counter/4000));
-//					counter = nextArrival;
-//					realNoOfCarsForRandomCase++;
-//				} else {
-//					// breaking the loop in case the maximum of cars
-//					// possible is already reached
-//					i = config.noOfCarsForRandomCase;
-//				}
-//			}
-//			
-//			for (int i = 0; i < realNoOfCarsForRandomCase; i++)
-//				System.out.println(eventListTemp[i].getEntryTime()+","+eventListTemp[i].getBackOrderTime());
-//			
-//			// lists that will be used later with the correct number of cars used
-//			carList = new Car[realNoOfCarsForRandomCase];
-//			eventList = new EventItem[realNoOfCarsForRandomCase];
-//			
-//			System.out.println("real no of cars: "+realNoOfCarsForRandomCase);
-//			
-//			// copying the cars from the temporary list to real list 
-//			for (int i = 0; i < realNoOfCarsForRandomCase; i++) {
-//				carList[i] = carListTemp[i];
-//				eventList[i] = eventListTemp[i];
-//			}
-//			break;
 			
 		case 3:
 			/** ROUND ROBIN TEST CASE **/
@@ -263,25 +231,31 @@ public class Main {
 			
 		case 5:
 			
-			int usedCars = 4362;
+			size = 0;
 			
 			CSV csv2 = CSV
 		    .separator(',')  // delimiter of fields
 		    .quote('"')      // quote character
 		    .create();       // new instance is immutable
 			
-			carList = new Car[usedCars];
-			eventList = new EventItem[usedCars];
+			csv2.read("random_demo_data.csv", new CSVReadProc() {
+			    public void procRow(int rowIndex, String... values) {
+			    	size = rowIndex+1;
+			    }
+			});
+			
+			carList = new Car[size];
+			eventList = new EventItem[size];
 
-			csvData = new int[2][usedCars];
-			csv2.read("demo_realistic.csv", new CSVReadProc() {
+			csvData = new int[2][size];
+			csv2.read("random_demo_data.csv", new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
 			    	csvData[0][rowIndex] = Integer.valueOf(values[0]);
 			    	csvData[1][rowIndex] = Integer.valueOf(values[1]);
 			    }
 			});
 			
-			for (int i = 0; i < usedCars; i++) {
+			for (int i = 0; i < size; i++) {
 				eventList[i] = new EventItem();
 				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, config);
 				eventList[i].setupEvent(carList[i], csvData[0][i], csvData[1][i]);
@@ -317,7 +291,45 @@ public class Main {
 		
 	}
 	
-	private static int nextPoissonValue() {
+	private static int[][] addANewCar(int[][] matching, int arrivalTime, int parkingDuration) {
+		int [][] returnArray = new int[matching.length+1][2];
+		if (matching.length > 0) {
+			for (int i = 0; i < matching.length; i++) {
+				returnArray[i][0] = matching[i][0];
+				returnArray[i][1] = matching[i][1];
+			}
+		}
+		
+		returnArray[matching.length][0] = arrivalTime;
+		returnArray[matching.length][1] = arrivalTime+parkingDuration;
+		return returnArray;
+	}
+	
+	private static boolean isEnoughCars(int[][] matching) {
+		if (matching.length < config.noOfParkingSpaces)
+			return false;
+		// check how large the array has to be
+		int sizeOfTestArray = 0;
+		for (int i = 0; i < matching.length; i++) {
+			if (sizeOfTestArray < matching[i][1])
+				sizeOfTestArray = matching[i][1];
+		}
+		
+		// create new array with correct size
+		int[] testArray = new int[sizeOfTestArray];
+		for (int i = 0; i < matching.length; i++) {
+			for (int j = matching[i][0]; j < matching[i][1]; j++) {
+				testArray[j]++;
+				// return true if there are enough cars in the parking lot
+				if (testArray[j] == config.noOfParkingSpaces)
+					return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private static int nextArrivalTime() {
 		Poisson pois = new Poisson(3.5, new RandomEngine() {
 			
 			@Override
@@ -327,32 +339,18 @@ public class Main {
 				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
 			}
 		});
-		return pois.nextInt();
+		return (Math.min(pois.nextInt(),9)*4000+(config.secureRandom?(int)((secRandom.nextDouble()*4000)+0.5):(int)((Math.random()*4000)+0.5)));
 	}
 	
-	private static int nextInterarrivalTime(int time) {
-		//           (7)8-9, 9-10 10-11 11-12 12-13 13-14 14-15 15-16 16-17 17-18 //18-19 19-20 20-21
-		int[] lutArr = {58,  444, 630,  474,  382,  388,  430,  424,  393,  305}; //231,  165,  70};
-		for (int i = 0; i < lutArr.length; i++) {
-			lutArr[i] = (int)(((double)lutArr[i]*config.noOfParkingSpaces)/1250);
-		}
-		Exponential exp = new Exponential(3.5, new RandomEngine() {
-			public int nextInt() {
-				if (config.secureRandom)
-					return secRandom.nextInt();
-				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
-			}
-		}); 
-		return ((int)((exp.nextDouble()*4000)+0.5));
-	}
 	
 	private static int nextParkDuration(int time) {
 		// if the minimum parking duration is set to 1 hour you need no random
 		if (config.minParkDuration >= 60)
 			return 4000;
-		
+		time = Math.min(time, 9);
+		time = Math.max(time, 0);
 		double[][] lutDep = {{0.96,3}, {0.95,3}, {0.93,4}, {0.9,6}, {0.87,6}, {0.98,6}, {0.89,6}, {0.9,5}, {0.94,4}, {0.98,4}};
-		NegativeBinomial bin = new NegativeBinomial((int)(lutDep[time][1]), lutDep[time][0], new RandomEngine() {
+		Binomial bin = new Binomial((int)(lutDep[time][1]), lutDep[time][0], new RandomEngine() {
 			public int nextInt() {
 				if (config.secureRandom)
 					return secRandom.nextInt();
@@ -362,12 +360,16 @@ public class Main {
 		
 		double rand = 0;
 		if (config.secureRandom)
-			rand = Math.abs(secRandom.nextInt()/Integer.MAX_VALUE);
+			rand = Math.abs((double)(secRandom.nextInt())/Integer.MAX_VALUE);
 		else
 			rand = Math.random();
-		
-		int parkDuration = ((int)(lutDep[time][1])-bin.nextInt())+(int)((rand*4000)+0.5);
-		
+//		System.out.println("rand: "+rand);
+		int nextRandom = ((int)(lutDep[time][1])-bin.nextInt());
+//		System.out.println("next random "+nextRandom);
+		int parkDuration = nextRandom*4000+(int)((rand*4000)+0.5);
+//		System.out.println("parkDuration: "+parkDuration);
+//		System.out.println("ParkDuration: "+((config.minParkDuration*4000)/60));
+//		System.exit(0);
 		if (parkDuration < ((config.minParkDuration*4000)/60))
 			return nextParkDuration(time);
 		

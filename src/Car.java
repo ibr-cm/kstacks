@@ -51,6 +51,7 @@ public class Car {
 	public boolean disabled;
 	
 	private Color color;
+	private float colorBrightness;
 	
 	/**
 	 * This debug option marks all cars red, which are going to this KStack.
@@ -92,7 +93,8 @@ public class Car {
 		hue = hue*0.8f+0.1f;
 		if (this.kstack.id == this.debugKStackID)
 			hue = 0.0f;  // Makes the car red in case of debugging this stack.
-		this.color = Color.getHSBColor(hue, 1.0f, (float)(0.5*Math.random()+0.5));
+		this.colorBrightness = (float)(0.5*Math.random()+0.5);
+		this.color = Color.getHSBColor(hue, 1.0f, this.colorBrightness);
 		this.currentStreet = spawn;
 		spawn.car = this;
 		Street tempStreet1 = spawn;
@@ -344,7 +346,7 @@ public class Car {
 	 */
 	public void checkForStartsStops() {
 		// if one of these three condition apply there is nothing to check for
-		if (this.drivingTarget == null || this.isInParkingLot || this.currentStreet == null)
+		if (this.drivingTarget == null || !this.isInParkingLot || this.currentStreet == null)
 			return;
 		if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
 			this.startstop++;
@@ -372,7 +374,7 @@ public class Car {
 	
 	public Color getColor() {
 		if (drivingTarget != null && this.kstack.id != this.debugKStackID)
-			return Color.getHSBColor(0.1f, 1.0f, 1.0f);
+			return Color.getHSBColor(0.1f, 1.0f, this.colorBrightness);
 		return this.color;
 	}
 }
