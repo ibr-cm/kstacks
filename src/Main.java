@@ -103,44 +103,57 @@ public class Main {
 			
 		case 2:
 			/** RANDOM CASE **/
-			System.out.println("Random Case!\r\nUsing "+config.noOfCarsForRandomCase+" Cars.");
-			// for further documentation please see config file
+			double lambdaSpawn = 3.5;
+			double[][] lutDep = {{0.96,3}, {0.95,3}, {0.93,4}, {0.9,6}, {0.87,6}, {0.98,6}, {0.89,6}, {0.9,5}, {0.94,4}, {0.98,4}};
 			
-			// temporary lists with the maximum of entries that are possible
-			Car[] carListTemp = new Car[config.noOfCarsForRandomCase];
-			EventItem[] eventListTemp = new EventItem[config.noOfCarsForRandomCase];
-
-			int counter = 0, realNoOfCarsForRandomCase = 0;
-			for (int i = 0; i < config.noOfCarsForRandomCase; i++) {
-				int nextArrival = counter+nextInterarrivalTime(counter/4000);
-				if ((nextArrival/4000) < 10) {
-					eventListTemp[i] = new EventItem();
-					carListTemp[i] = new Car(carSize, eventListTemp[i], spawn, despawn, crossroad, config);
-					eventListTemp[i].setupEvent(carListTemp[i], nextArrival, nextArrival + nextParkDuration(counter/4000));
-					counter = nextArrival;
-					realNoOfCarsForRandomCase++;
-				} else {
-					// breaking the loop in case the maximum of cars
-					// possible is already reached
-					i = config.noOfCarsForRandomCase;
+			Exponential exp = new Exponential(lambdaSpawn, new RandomEngine() {
+				
+				@Override
+				public int nextInt() {
+					if (config.secureRandom)
+						secRandom.nextInt();
+					return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
 				}
-			}
+			});
 			
-			for (int i = 0; i < realNoOfCarsForRandomCase; i++)
-				System.out.println(eventListTemp[i].getEntryTime()+","+eventListTemp[i].getBackOrderTime());
-			
-			// lists that will be used later with the correct number of cars used
-			carList = new Car[realNoOfCarsForRandomCase];
-			eventList = new EventItem[realNoOfCarsForRandomCase];
-			
-			System.out.println("real no of cars: "+realNoOfCarsForRandomCase);
-			
-			// copying the cars from the temporary list to real list 
-			for (int i = 0; i < realNoOfCarsForRandomCase; i++) {
-				carList[i] = carListTemp[i];
-				eventList[i] = eventListTemp[i];
-			}
-			break;
+//			System.out.println("Random Case!\r\nUsing "+config.noOfCarsForRandomCase+" Cars.");
+//			// for further documentation please see config file
+//			
+//			// temporary lists with the maximum of entries that are possible
+//			Car[] carListTemp = new Car[config.noOfCarsForRandomCase];
+//			EventItem[] eventListTemp = new EventItem[config.noOfCarsForRandomCase];
+//
+//			int counter = 0, realNoOfCarsForRandomCase = 0;
+//			for (int i = 0; i < config.noOfCarsForRandomCase; i++) {
+//				int nextArrival = counter+nextInterarrivalTime(counter/4000);
+//				if ((nextArrival/4000) < 10) {
+//					eventListTemp[i] = new EventItem();
+//					carListTemp[i] = new Car(carSize, eventListTemp[i], spawn, despawn, crossroad, config);
+//					eventListTemp[i].setupEvent(carListTemp[i], nextArrival, nextArrival + nextParkDuration(counter/4000));
+//					counter = nextArrival;
+//					realNoOfCarsForRandomCase++;
+//				} else {
+//					// breaking the loop in case the maximum of cars
+//					// possible is already reached
+//					i = config.noOfCarsForRandomCase;
+//				}
+//			}
+//			
+//			for (int i = 0; i < realNoOfCarsForRandomCase; i++)
+//				System.out.println(eventListTemp[i].getEntryTime()+","+eventListTemp[i].getBackOrderTime());
+//			
+//			// lists that will be used later with the correct number of cars used
+//			carList = new Car[realNoOfCarsForRandomCase];
+//			eventList = new EventItem[realNoOfCarsForRandomCase];
+//			
+//			System.out.println("real no of cars: "+realNoOfCarsForRandomCase);
+//			
+//			// copying the cars from the temporary list to real list 
+//			for (int i = 0; i < realNoOfCarsForRandomCase; i++) {
+//				carList[i] = carListTemp[i];
+//				eventList[i] = eventListTemp[i];
+//			}
+//			break;
 			
 		case 3:
 			/** ROUND ROBIN TEST CASE **/
@@ -317,7 +330,7 @@ public class Main {
 			return 4000;
 		
 		double[][] lutDep = {{0.96,3}, {0.95,3}, {0.93,4}, {0.9,6}, {0.87,6}, {0.98,6}, {0.89,6}, {0.9,5}, {0.94,4}, {0.98,4}};
-		Binomial bin = new Binomial((int)(lutDep[time][1]), lutDep[time][0], new RandomEngine() {
+		NegativeBinomial bin = new NegativeBinomial((int)(lutDep[time][1]), lutDep[time][0], new RandomEngine() {
 			public int nextInt() {
 				if (config.secureRandom)
 					return secRandom.nextInt();
