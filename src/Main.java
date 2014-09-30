@@ -17,8 +17,8 @@ public class Main {
 	private static Crossroad crossroad;
 	private static Despawn despawn;
 	private static KStack kstacks[];
-	public static Random mathRandom;
-	private static SecureRandom secRandom;
+//	public static Random mathRandom;
+//	private static SecureRandom secRandom;
 	private static Configuration config;
 	private static Exponential exponential;
 	
@@ -28,7 +28,7 @@ public class Main {
 	
 	
 	
-	private static SecureRandom secRandom2 = new SecureRandom();
+//	private static SecureRandom secRandom2 = new SecureRandom();
 	
 	
 	public static void main(String args[]) {
@@ -49,9 +49,9 @@ public class Main {
 		crossroad = new Crossroad();
 		despawn = new Despawn();
 		
-		mathRandom = new Random(config.randomSeed);
-		secRandom = new SecureRandom();
-		secRandom.setSeed(config.randomSeed);
+//		mathRandom = new Random(config.randomSeed);
+//		config.secRandom = new SecureRandom();
+		config.secRandom.setSeed(config.randomSeed);
 		
 		// first third belongs to top lane; second third belongs to middle lane
 		// last third belongs to bottom lane;
@@ -96,14 +96,14 @@ public class Main {
 		case 0:
 			/** BEST CASE **/
 			for (int i = 0; i < totalCarsUsed; i++) {
-				eventList[i].setupEvent(carList[i], 0, waitTime+100*i);
+				eventList[i].setupEvent(carList[i], 0, 3000+waitTime+(50*1440)-50*i);
 			}
 			break;
 			
 		case 1:
 			/** WORST CASE **/
 			for (int i = 0; i < totalCarsUsed; i++) {
-				eventList[i].setupEvent(carList[i], 0, waitTime+10000*(i/(totalCarsUsed/kHeight)));
+				eventList[i].setupEvent(carList[i], 0, waitTime+5000*(i/(totalCarsUsed/kHeight)));
 			}
 			break;
 			
@@ -140,6 +140,7 @@ public class Main {
 			break;
 			
 		case 4:
+			/** REALISTIC TEST CASE **/
 			csvData = new int[3][1];
 			size = 0;
 			CSV csv = CSV
@@ -147,67 +148,133 @@ public class Main {
 				    .quote('"')      // quote character
 				    .create();       // new instance is immutable
 			
+			// Read the file and count the lines
 			csv.read(config.inputFileName, new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
 			    	size = rowIndex+1;
 			    }
 			});
 
-			csvData = new int[3][size];
+			// create new array to transcribe csv to array
+			csvData = new int[size][3];
+			
+			// transcribe data to array
 			csv.read(config.inputFileName, new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
-			    	csvData[0][rowIndex] = Integer.valueOf(values[0]);
-			    	csvData[1][rowIndex] = Integer.valueOf(values[1]);
-			    	csvData[2][rowIndex] = Integer.valueOf(values[2]);
+			    	csvData[rowIndex][0] = Integer.valueOf(values[0]); // tick
+			    	csvData[rowIndex][1] = Integer.valueOf(values[1]); // entries
+			    	csvData[rowIndex][2] = Integer.valueOf(values[2]); // exits
 			    }
 			});
+			
+			// count incoming cars
 			int eventsSize = 0;
 			for (int i=0; i<size; i++) {
-				eventsSize += csvData[1][i];
+				eventsSize += csvData[i][1];
 			}
+
 			
+			// set correct number of cars used
 			totalCarsUsed = eventsSize;
 			
-			int events[][] = new int[2][eventsSize];
+			
+//			int highestValue = 0, currentValue = 0;
+//			for (int i = 0; i < csvData[0].length; i++) {
+//				currentValue += csvData[1][i];
+//				highestValue = Math.max(highestValue, currentValue);
+//				currentValue -= csvData[2][i];
+//			}
+//			System.out.println("current: "+currentValue+", max value: "+highestValue);
+//			System.exit(0);
+			
+			
+			// create new list of events, which will be formed to eventItems
+			int events[][] = new int[eventsSize][2];
 			for (int i = 0; i < eventsSize; i++) {
-				events[0][i] = 0;
-				events[1][i] = 0;
+				events[i][0] = 0;
+				events[i][1] = 0;
 			}
-			int eventsPos = 0;
+			
+			// set counter that iterates throught the events-array
+			int eventsPointer = 0;
+			
+			// new ListEntry for the list of possible entries
 			ListEntry list = new ListEntry();
 			
 			for (int i = size-1; i >= 0; i--) {
-				if (csvData[1][i] != 0) {
+				// if there is an exit assign at this time
+				if (csvData[i][2] != 0) {
+					// create new list
 					list = new ListEntry();
 					
 					
-					
-					for (int j = i; j < size; j++) {
-						if (((csvData[0][i]+1000) <= csvData[0][j]) && (csvData[2][j] > 0)) {
-							for (int k = 0; k < csvData[2][j]; k++)
+					// look for an entry that is at least 15mins earlier
+					for (int j = i; j >= 0; j--) {
+						// did it enter +15min erlier?
+						if ((csvData[j][0] <= (csvData[i][0]-1000)) && (csvData[j][1] > 0)) { //(csvData[j][0] >= (csvData[i][0]-12000)) && 
+							
+							// create as much list entries as needed
+//							for (int k = 0; k < csvData[j][1]; k++)
 								list.append(list, j);
 						}
 					}
+					
+//					System.out.println("i: "+i);
+//					list.print(list);
+//					System.exit(0);
+					
+					// are there any entries, that could work
 					if (list.size() != 0) {
-						int exitIndex = list.getListEntry((int)(getRandomNumber()*(float)(list.size()))).index;
-						csvData[1][i]--;
-						csvData[2][exitIndex]--;
-						events[0][eventsPos] = csvData[0][i]+(int)(getRandomNumber()*66.0);
-						events[1][eventsPos] = csvData[0][exitIndex]+(int)(getRandomNumber()*66.0);
-						config.output.writeToMappingFile(events[0][eventsPos]+","+events[1][eventsPos]);
-						eventsPos++;
+						// find a random one
+						int enterIndex = list.getListEntry((int)(config.secRandom.nextFloat()*(float)(list.size()))).index;
+						// reduce the exits by 1
+						csvData[i][2]--;
+						// reduce the entries by 1
+						csvData[enterIndex][1]--;
+						// make correct entry in the events list
+						events[eventsPointer][0] = csvData[enterIndex][0]+(int)(config.secRandom.nextFloat()*66.0);
+						events[eventsPointer][1] = csvData[i][0]+(int)(config.secRandom.nextFloat()*66.0);
+						// print into the mapping file
+						config.output.writeToMappingFile(events[eventsPointer][0]+","+events[eventsPointer][1]);
+						eventsPointer++;
 						i++;
 					}
 				}
 			}
 			
+			int tenK=0;
+			// map every car that did not exit the parking lot by now to exit 100000
+			for (int i = 0; i < size; i++) {
+				// if there is an entry
+				if (csvData[i][1] != 0) {
+//					System.out.println(i);
+					tenK++;
+					// map it to exit = 100k
+					events[eventsPointer][0] = csvData[i][0]+(int)(config.secRandom.nextFloat()*66.0);
+					events[eventsPointer][1] = 100000;
+					config.output.writeToMappingFile(events[eventsPointer][0]+","+events[eventsPointer][1]);
+					// increase pointer
+					eventsPointer++;
+					// reduce array cell in csvData
+					csvData[i][1]--;
+					// work on same cell again
+					i--;
+				}
+			}
+			System.out.println("cars with backOrderTime = 10k: "+tenK);
+//			System.exit(0);
 			
+			// check how many cars there will actually be
 			totalCarsUsed = 0;
-			for (int i=0; i<eventsSize; i++) {
-				if (events[1][i] != 0)
+			for (int i=0; i<events.length; i++) {
+				// no car will exit at 0, so this is a pretty good indicator
+				if (events[i][1] != 0)
 					totalCarsUsed++;
 			}
 			
+			System.out.println("totalCarsUsed: "+totalCarsUsed);
+			
+			// print out if verboseLevel permits
 			if (config.verboseLevel > 0) {
 				System.out.println("# EntryTime,ExitTime");
 				for (int i = 0; i < totalCarsUsed; i++) {
@@ -215,6 +282,7 @@ public class Main {
 				}
 			}
 			
+			// creation of the correct number of items 
 			carList = new Car[totalCarsUsed];
 			eventList = new EventItem[totalCarsUsed];
 			
@@ -223,22 +291,40 @@ public class Main {
 			for (int i=0; i<totalCarsUsed; i++) {
 				eventList[i] = new EventItem();
 				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, config);
-				eventList[i].setupEvent(carList[i], events[0][i], events[1][i]);
+				eventList[i].setupEvent(carList[i], events[i][0], events[i][1]);
 //				System.out.println(events[0][i]+","+events[1][i]);
 			}
-//			System.exit(0);
+			
+			int[] testArray = new int[100001];
+			for (int i = 0; i < testArray.length; i++)
+				testArray[i] = 0;
+			
+			int highestValue2 = 0;
+			for (int i = 0; i < eventList.length; i++) {
+				System.out.println(eventList[i].getEntryTime()+","+eventList[i].getBackOrderTime());
+				for (int j = eventList[i].getEntryTime(); j < eventList[i].getBackOrderTime(); j++)
+					testArray[j]++;
+			}
+			for (int i = 0; i < testArray.length; i++) {
+				highestValue2 = Math.max(highestValue2, testArray[i]);
+			}
+			System.out.println("max value: "+highestValue2);
+			
+			System.exit(0);
 			break;
 			
 		case 5:
 			
 			size = 0;
 			
+			String fileName = "real_data.csv";
+			
 			CSV csv2 = CSV
 		    .separator(',')  // delimiter of fields
 		    .quote('"')      // quote character
 		    .create();       // new instance is immutable
 			
-			csv2.read("random_demo_data.csv", new CSVReadProc() {
+			csv2.read(fileName, new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
 			    	size = rowIndex+1;
 			    }
@@ -248,7 +334,7 @@ public class Main {
 			eventList = new EventItem[size];
 
 			csvData = new int[2][size];
-			csv2.read("random_demo_data.csv", new CSVReadProc() {
+			csv2.read(fileName, new CSVReadProc() {
 			    public void procRow(int rowIndex, String... values) {
 			    	csvData[0][rowIndex] = Integer.valueOf(values[0]);
 			    	csvData[1][rowIndex] = Integer.valueOf(values[1]);
@@ -334,12 +420,12 @@ public class Main {
 			
 			@Override
 			public int nextInt() {
-				if (config.secureRandom)
-					secRandom.nextInt();
-				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
+//				if (config.secureRandom)
+					return config.secRandom.nextInt();
+//				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
 			}
 		});
-		return (Math.min(pois.nextInt(),9)*4000+(config.secureRandom?(int)((secRandom.nextDouble()*4000)+0.5):(int)((Math.random()*4000)+0.5)));
+		return (Math.min(pois.nextInt(),9)*4000+(int)((config.secRandom.nextDouble()*4000)+0.5));
 	}
 	
 	
@@ -352,17 +438,17 @@ public class Main {
 		double[][] lutDep = {{0.96,3}, {0.95,3}, {0.93,4}, {0.9,6}, {0.87,6}, {0.98,6}, {0.89,6}, {0.9,5}, {0.94,4}, {0.98,4}};
 		Binomial bin = new Binomial((int)(lutDep[time][1]), lutDep[time][0], new RandomEngine() {
 			public int nextInt() {
-				if (config.secureRandom)
-					return secRandom.nextInt();
-				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
+//				if (config.secureRandom)
+					return config.secRandom.nextInt();
+//				return (int)(((Math.random()*2)-1)*Integer.MAX_VALUE);
 			}
 		});
 		
 		double rand = 0;
-		if (config.secureRandom)
-			rand = Math.abs((double)(secRandom.nextInt())/Integer.MAX_VALUE);
-		else
-			rand = Math.random();
+//		if (config.secureRandom)
+			rand = config.secRandom.nextDouble();
+//		else
+//			rand = Math.random();
 //		System.out.println("rand: "+rand);
 		int nextRandom = ((int)(lutDep[time][1])-bin.nextInt());
 //		System.out.println("next random "+nextRandom);
@@ -727,9 +813,9 @@ public class Main {
 	 * Random Number Generator
 	 * @return random float with [0,1)
 	 */
-	private static float getRandomNumber() {
-		if (!config.secureRandom)
-			return (float)(mathRandom.nextFloat());
-		return (float)(Math.abs(mathRandom.nextInt()))/(float)(Integer.MAX_VALUE);
-	}
+//	private static float getRandomNumber() {
+//		if (!config.secureRandom)
+//			return (float)(mathRandom.nextFloat());
+//		return (float)(Math.abs(mathRandom.nextInt()))/(float)(Integer.MAX_VALUE);
+//	}
 }

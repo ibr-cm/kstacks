@@ -1,5 +1,9 @@
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -53,15 +57,15 @@ public class Output {
 		} catch (Exception e) {System.out.println("Could not create mappingWriter.");}
 		
 		try{
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create backOrderWriter.");}
 		
 		try{
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create tilesMovedWriter.");}
 		
 		try{
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
+			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create startstopWriter.");}
 	}
 	
@@ -113,9 +117,9 @@ public class Output {
 //			return;
 		
 		try {
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
-			mappingWriter.write(text+"\r\n");
-			mappingWriter.close();
+			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+			backOrderWriter.write(text+"\r\n");
+			backOrderWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
@@ -125,9 +129,9 @@ public class Output {
 //			return;
 		
 		try {
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
-			mappingWriter.write(text+"\r\n");
-			mappingWriter.close();
+			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+			tilesMovedWriter.write(text+"\r\n");
+			tilesMovedWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
@@ -137,9 +141,9 @@ public void writeToStartStop(int text) {
 //			return;
 		
 		try {
-			mappingWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
-			mappingWriter.write(text+"\r\n");
-			mappingWriter.close();
+			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
+			startstopWriter.write(text+"\r\n");
+			startstopWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
@@ -192,8 +196,8 @@ public void writeToStartStop(int text) {
 				
 			}
 			if (config.simulatorCase == 2 || config.simulatorCase == 3 || config.simulatorCase == 4) {
-				configWriter.write("Mapping from incoming to outgoing cars where randomized with: "+(config.secureRandom?"secureRandom":"Math.random")+" (config.secureRandom = "+(config.secureRandom?"true":"false")+")\r\n");
-				configWriter.write("Seed: "+config.randomSeed+"\r\n");
+//				configWriter.write("Mapping from incoming to outgoing cars where randomized with: "+(config.secureRandom?"secureRandom":"Math.random")+" (config.secureRandom = "+(config.secureRandom?"true":"false")+")\r\n");
+				configWriter.write("Randomization seed: "+config.randomSeed+"\r\n");
 			}
 			configWriter.newLine();
 			configWriter.write("Layout information\r\n");
@@ -222,7 +226,7 @@ public void writeToStartStop(int text) {
 		int X = 2+config.parkingRows+config.carSize+config.carSize*config.kHeight, Y = (6*config.carSize*config.kHeight)+3;
 		int x =0, y = 0, PIX_SIZE = 16;
 		BufferedImage bi = new BufferedImage( PIX_SIZE * X, PIX_SIZE * Y, BufferedImage.TYPE_3BYTE_BGR );
-		Graphics2D g=(Graphics2D)bi.getGraphics();
+		Graphics2D g = (Graphics2D)bi.getGraphics();
 		String filename =  "tick_";
 		if (tick < 100000)
 			filename += "0";
@@ -284,33 +288,69 @@ public void writeToStartStop(int text) {
 			tempStreet1 = tempStreet1.prev1;
 		}
 		for (int i = 0; i < config.parkingRows+2+config.kHeight*config.carSize+config.carSize; i++) {
-			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.getColor());
-			} else if (tempStreet1.blockingKStack != null)
+			
+			if (tempStreet1.blockingKStack != null) {
 				g.setColor(Color.RED);
-			else
+				g.fillRect(i*PIX_SIZE, (Y/2)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+			} else {
 				g.setColor(Color.LIGHT_GRAY);
-			g.fillRect(i*PIX_SIZE, (Y/2)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+				g.fillRect(i*PIX_SIZE, (Y/2)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+			}
+			
 			if (tempStreet1.next1 != null) // this should only catch the last case when the pointer already reached despawn
 				tempStreet1 = tempStreet1.next1;
 		}
+		
+		
+		
+		// paint the cars to middle lane
+		tempStreet1 = spawn;
+		while (tempStreet1.prev1 != null) {
+			tempStreet1 = tempStreet1.prev1;
+		}
+		for (int i = 0; i < config.parkingRows+2+config.kHeight*config.carSize+config.carSize; i++) {
+			if (tempStreet1 == spawn && tempStreet1.car != null) {
+				if (tempStreet1.car == spawn.next1.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "right", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+				} else if (tempStreet1.car == spawn.next2.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, ((Y/2)-1)*PIX_SIZE);
+				} else if (tempStreet1.car == spawn.next3.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+				}
+			} else if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet && tempStreet1.car == tempStreet1.next1.car) {
+//				g.setColor(tempStreet1.car.getColor());
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "right", PIX_SIZE);
+				g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+			} else if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet && tempStreet1.kstack1.car != tempStreet1.car) {
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+				g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+			}
+			
+			
+			
+			if (tempStreet1.next1 != null) // this should only catch the last case when the pointer already reached despawn
+				tempStreet1 = tempStreet1.next1;
+		}
+		
+		
+		
+		
 		
 
 		// paint left vertical streets gray or red (if blocked)
 		tempStreet1 = spawn.next2;
 		Street tempStreet2 = spawn.next3;
 		for (int i = 1; i < 2*config.kHeight*config.carSize+2; i++) {
-			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.getColor());
-			} else if (tempStreet1.blockingKStack != null)
+			if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
 			g.fillRect(config.carSize*config.kHeight*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
-			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.getColor());
-			} else if (tempStreet2.blockingKStack != null)
+			if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
@@ -322,17 +362,13 @@ public void writeToStartStop(int text) {
 		
 		// use the position of the streets and keep painting upper and lower horizontal streets
 		for (int i = 0; i < config.parkingRows; i++) {
-			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.getColor());
-			} else if (tempStreet1.blockingKStack != null)
+			if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
 			g.fillRect((config.carSize*config.kHeight+1+i)*PIX_SIZE, (((Y/2))-2*config.carSize*config.kHeight-1)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
-			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.getColor());
-			} else if (tempStreet2.blockingKStack != null)
+			if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
@@ -344,17 +380,13 @@ public void writeToStartStop(int text) {
 		
 		// and now the right vertical streets
 		for (int i = 2*config.kHeight*config.carSize+1; i > 0; i--) {
-			if (tempStreet1.car != null) {
-				g.setColor(tempStreet1.car.getColor());
-			} else if (tempStreet1.blockingKStack != null)
+			if (tempStreet1.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
 			g.fillRect((config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
 			
-			if (tempStreet2.car != null) {
-				g.setColor(tempStreet2.car.getColor());
-			} else if (tempStreet2.blockingKStack != null)
+			if (tempStreet2.blockingKStack != null)
 				g.setColor(Color.RED);
 			else
 				g.setColor(Color.LIGHT_GRAY);
@@ -362,6 +394,147 @@ public void writeToStartStop(int text) {
 			
 			tempStreet1 = tempStreet1.next1;
 			tempStreet2 = tempStreet2.next1;
+		}
+		
+		
+		
+		// paint the cars to middle lane
+		tempStreet1 = spawn;
+		while (tempStreet1.prev1 != null) {
+			tempStreet1 = tempStreet1.prev1;
+		}
+		for (int i = 0; i < config.parkingRows+2+config.kHeight*config.carSize+config.carSize; i++) {
+			if (tempStreet1 == spawn && tempStreet1.car != null) {
+				if (tempStreet1.car == spawn.next1.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "right", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+				} else if (tempStreet1.car == spawn.next2.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, ((Y/2)-1)*PIX_SIZE);
+				} else if (tempStreet1.car == spawn.next3.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+					g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+				}
+			} else if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet && tempStreet1.car == tempStreet1.next1.car) {
+//						g.setColor(tempStreet1.car.getColor());
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "right", PIX_SIZE);
+				g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+			} else if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet && tempStreet1.kstack1.car != tempStreet1.car) {
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+				g.drawImage(car, null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+			}
+			
+			
+			
+			if (tempStreet1.next1 != null) // this should only catch the last case when the pointer already reached despawn
+				tempStreet1 = tempStreet1.next1;
+		}
+		
+		
+		// cars on the non-middle street
+		tempStreet1 = spawn.next2;
+		tempStreet2 = spawn.next3;
+		for (int i = 1; i < ((2*config.kHeight*config.carSize)+2); i++) {
+			
+			if (tempStreet1.car != null && tempStreet1 == tempStreet1.car.currentStreet) {
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+				g.drawImage(car, null, config.carSize*config.kHeight*PIX_SIZE, (((Y/2))-i)*PIX_SIZE);
+			}
+			
+//				if (tempStreet2 == spawn && spawn.car != null && spawn.car == spawn.next3.car) {
+//					BufferedImage car = getCar(tempStreet2.car.getColor(), "down", PIX_SIZE);
+//					g.drawImage(car, null, config.carSize*config.kHeight*PIX_SIZE, (((Y/2))+i-1)*PIX_SIZE);
+//				} else
+			if (tempStreet2.car != null && tempStreet2 != tempStreet2.car.currentStreet && i < ((2*config.kHeight*config.carSize)+1)) {
+				BufferedImage car = getCar(tempStreet2.car.getColor(), "down", PIX_SIZE);
+				g.drawImage(car, null, config.carSize*config.kHeight*PIX_SIZE, (((Y/2))+i)*PIX_SIZE);
+			}
+			
+			tempStreet1 = tempStreet1.next1;
+			tempStreet2 = tempStreet2.next1;
+		}
+		
+		tempStreet1 = tempStreet1.prev1;
+		tempStreet2 = tempStreet2.prev1;
+		
+		// cars on top and bottom horizontal streets
+		for (int i = 0; i < config.parkingRows+1; i++) {
+			if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet) {
+				if (tempStreet1.car == tempStreet1.next1.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "right", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))-2*config.carSize*config.kHeight-1)*PIX_SIZE);
+				} else if (tempStreet1.car == tempStreet1.kstack1.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))-2*config.carSize*config.kHeight-2)*PIX_SIZE);
+				} else if (tempStreet1.car == tempStreet1.kstack2.car) {
+					BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))-2*config.carSize*config.kHeight-1)*PIX_SIZE);
+				}
+			}
+			
+			if (tempStreet2.car != null && tempStreet2 != tempStreet2.car.currentStreet) {
+				if (tempStreet2.car == tempStreet2.next1.car) {
+					BufferedImage car = getCar(tempStreet2.car.getColor(), "right", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))+2*config.carSize*config.kHeight+1)*PIX_SIZE);
+				}  else if (tempStreet2.car == tempStreet2.kstack1.car) {
+					BufferedImage car = getCar(tempStreet2.car.getColor(), "up", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))+2*config.carSize*config.kHeight)*PIX_SIZE);
+				} else if (tempStreet2.car == tempStreet2.kstack2.car) {
+					BufferedImage car = getCar(tempStreet2.car.getColor(), "down", PIX_SIZE);
+					g.drawImage(car, null, (config.carSize*config.kHeight+i)*PIX_SIZE, (((Y/2))+2*config.carSize*config.kHeight+1)*PIX_SIZE);
+				}
+			}
+			
+			tempStreet1 = tempStreet1.next1;
+			tempStreet2 = tempStreet2.next1;
+		}
+		
+		
+		
+		// TODO
+		// fill right vertical streets with cars 
+		for (int i = 2*config.kHeight*config.carSize+1; i > 0; i--) {
+			
+//			if (tempStreet1.car != null && )
+//				g.setColor(Color.RED);
+//			else
+//				g.setColor(Color.LIGHT_GRAY);
+//			g.fillRect((config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+//			
+
+			if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet) {
+				BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+				g.drawImage(car, null, (config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE);
+			}
+			
+			if (tempStreet2.car != null && tempStreet2 == tempStreet2.car.currentStreet && tempStreet2.prev1.kstack1 == null) {
+				BufferedImage car = getCar(tempStreet2.car.getColor(), "up", PIX_SIZE);
+				g.drawImage(car, null, (config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (((Y/2))+i)*PIX_SIZE);
+			}
+			
+			
+				
+//				g.setColor(Color.RED);
+//			else
+//				g.setColor(Color.LIGHT_GRAY);
+//			g.fillRect((config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (((Y/2))-i)*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+			
+			tempStreet1 = tempStreet1.next1;
+			tempStreet2 = tempStreet2.next1;
+			
+			
+			
+		}
+		
+		
+		if (crossroad.car != null && crossroad == crossroad.car.currentStreet) {
+			if (crossroad.car == crossroad.prev2.car) {
+//				BufferedImage car = getCar(crossroad.car.getColor(), "down", PIX_SIZE);
+//				g.drawImage(car, null, (config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, ((Y/2)-1)*PIX_SIZE);
+			} else if (crossroad.car == crossroad.prev3.car) {
+				BufferedImage car = getCar(crossroad.car.getColor(), "up", PIX_SIZE);
+				g.drawImage(car, null, (config.carSize*config.kHeight+config.parkingRows+1)*PIX_SIZE, (Y/2)*PIX_SIZE);
+			}
 		}
 
 			
@@ -378,9 +551,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y--;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 == tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y--;
@@ -392,9 +565,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y++;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y++;
@@ -422,9 +595,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y--;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 == tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y--;
@@ -436,9 +609,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y++;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y++;
@@ -466,9 +639,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y--;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 == tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "up", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y--;
@@ -480,9 +653,9 @@ l2:			while (tempStreet1 != crossroad) {
 					y++;
 					
 					while (tempStreet1 != null) {
-						if (tempStreet1.car != null) {
-							g.setColor(tempStreet1.car.getColor());
-							g.fillRect(x*PIX_SIZE, y*PIX_SIZE, PIX_SIZE, PIX_SIZE);
+						if (tempStreet1.car != null && tempStreet1 != tempStreet1.car.currentStreet) {
+							BufferedImage car = getCar(tempStreet1.car.getColor(), "down", PIX_SIZE);
+							g.drawImage(car, null, x*PIX_SIZE, y*PIX_SIZE);
 						}
 						tempStreet1 = tempStreet1.next1;
 						y++;
@@ -495,7 +668,8 @@ l2:			while (tempStreet1 != crossroad) {
 				}
 			}
 		}
-		// save all the images!!
+		
+
 		g.dispose();
         saveToFile( bi, filename );
 	}
@@ -526,6 +700,61 @@ l2:			while (tempStreet1 != crossroad) {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private BufferedImage getCar(Color color, String rotation, int PIX_SIZE) {
+		
+		// choose right template
+		BufferedImage carColor = null;
+		if (rotation.equals("down")) {
+			carColor = config.carColor270;
+		} else if (rotation.equals("right")) {
+			carColor = config.carColor0;
+		} else {
+			carColor = config.carColor90;
+		}
+
+		// recolor it
+		Color pixelColor;
+		BufferedImage carColorTemp = new BufferedImage(carColor.getWidth(), carColor.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		for (int i = 0; i < carColor.getWidth(); i++) {
+			for (int j = 0; j < carColor.getHeight(); j++) {
+				
+				try {
+					pixelColor = new Color(carColor.getRGB(i, j));
+					if (pixelColor.getRed() != 0) {
+						carColorTemp.setRGB(i, j, color.getRGB());
+					}
+				} catch (Exception e) {e.printStackTrace();}
+				
+			}
+		}
+		
+		
+		
+		BufferedImage car = new BufferedImage(carColor.getWidth(), carColor.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics g = car.getGraphics();
+		g.drawImage(carColorTemp, 0, 0, null);
+		
+		// add correct frame
+		if (rotation.equals("down")) {
+			g.drawImage(config.carFrame270, 0, 0, null);
+		} else if (rotation.equals("right")) {
+			g.drawImage(config.carFrame0, 0, 0, null);
+		} else {
+			g.drawImage(config.carFrame90, 0, 0, null);
+		}
+		
+		return car;
+	}
 	
 	
 	

@@ -15,6 +15,12 @@ public class EventItem {
 	private int exitTime; // in ticks -- time when car public KStack kstack;actually exits parking lot
 	private boolean fulfilled;
 	
+	/**
+	 * If this is set true the car will not be put into the smallest stack, but
+	 * rather put into a random stack, which still has enough room left.
+	 */
+	public boolean randomStack;
+	
 	
 	public EventItem() {
 		this.car = null;
@@ -22,6 +28,7 @@ public class EventItem {
 		this.backOrderTime = 0;
 		this.backOrderDelay = 0;
 		this.fulfilled = true;
+		this.randomStack = false;
 	}
 	
 	public void setupEvent(Car car, int entryTime, int backOrderTime) {
@@ -31,6 +38,7 @@ public class EventItem {
 		this.backOrderDelay = 0;
 		this.exitTime = 0;
 		this.fulfilled = false;
+		this.randomStack = false;
 	}
 	
 	

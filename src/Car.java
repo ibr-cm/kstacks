@@ -88,11 +88,13 @@ public class Car {
 	}
 	
 	public void spawn() {
-		float hue = (this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
-		hue -= (int)hue;
-		hue = hue*0.8f+0.1f;
-		if (this.kstack.id == this.debugKStackID)
-			hue = 0.0f;  // Makes the car red in case of debugging this stack.
+		
+//		float hue = (float)(this.kstack.id)*0.05f;//(this.kstack.id%2)*0.5f+this.kstack.id*0.05f;
+//		hue -= (int)hue;
+//		hue = hue*0.8f+0.1f;
+//		if (this.kstack.id == this.debugKStackID)
+//			hue = 0.0f;  // Makes the car red in case of debugging this stack.
+		float hue = config.secRandom.nextFloat();
 		this.colorBrightness = (float)(0.5*Math.random()+0.5);
 		this.color = Color.getHSBColor(hue, 1.0f, this.colorBrightness);
 		this.currentStreet = spawn;
@@ -373,8 +375,8 @@ public class Car {
 	}
 	
 	public Color getColor() {
-		if (drivingTarget != null && this.kstack.id != this.debugKStackID)
-			return Color.getHSBColor(0.1f, 1.0f, this.colorBrightness);
+//		if (drivingTarget != null && this.kstack.id != this.debugKStackID)
+//			return Color.getHSBColor(0.1f, 1.0f, this.colorBrightness);
 		return this.color;
 	}
 }

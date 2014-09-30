@@ -1,5 +1,13 @@
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+import javax.imageio.ImageIO;
 
 /**
  * Confiugration file for the VCharge Simulator
@@ -57,8 +65,10 @@ public class Configuration {
 	 *    <tick>,<cars entering the parking lot>,<cars exiting the parking lot>
 	 * 5: use a plain CSV
 	 */
-	public final int simulatorCase = 5;
+	public final int simulatorCase = 0;
 	
+	public final int assortByRandom = -1;
+	public final int excludeFromResults = 100000;
 	
 	/**
 	 * When a csv file of a specific form is used this setting is important.
@@ -76,7 +86,7 @@ public class Configuration {
 	 * variable randomSeed. When using Math.random (secureRandom = false) the
 	 * results are the same per run (on same data) when using the same seed.
 	 */
-	public final boolean secureRandom = true;
+//	public final boolean secureRandom = true;
 	public final int randomSeed = 1001;
 	
 	
@@ -128,7 +138,7 @@ public class Configuration {
 	 * everything gets bigger.
 	 */
 	public final int noOfParkingSpaces = 1440;
-	public final int kHeight = 6;
+	public final int kHeight = 4;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
@@ -161,9 +171,12 @@ public class Configuration {
 	public final String resultPostfix = ((simulatorCase == 4 || simulatorCase == 5)?"csv-input_":"testCase_")+simulatorCase+"_"+date;
 	
 	
-	
-	
-	
+	/**
+	 * -DO NOT TOUCH-
+	 */
+	public SecureRandom secRandom;
+	public BufferedImage carFrame0, carFrame90, carFrame270, carColor0, carColor90, carColor270;
+	public int PIX_SIZE = 16;
 	
 	
 	
@@ -202,7 +215,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 50;
+	public final int visualOutput = 20;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given
@@ -261,10 +274,10 @@ public class Configuration {
 	 * DEFAULT: public final int debugPeriodVisual = 0;
 	 * DEFAULT: public final int debugPersionVerbose = 0;
 	 */
-	public final int debugPeriodStart = -1;
-	public final int debugPeriodStop = -1;
-	public final boolean debugBreakAfter = false; 
-	public final int debugPeriodVisual = 0;
+	public final int debugPeriodStart = 8200;
+	public final int debugPeriodStop = 8350;
+	public final boolean debugBreakAfter = true; 
+	public final int debugPeriodVisual = 1;
 	public final int debugPeriodVerbose = 0;
 	
 	
@@ -287,7 +300,55 @@ public class Configuration {
 
 	
 	public Configuration() {
+		this.secRandom = new SecureRandom();
 		this.output = new Output(this);
+		
+		try {
+
+			BufferedImage carColor = ImageIO.read(new File("car-color.png"));
+			BufferedImage carFrame = ImageIO.read(new File("car-frame.png"));
+			AffineTransform at = new AffineTransform();
+			AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+			
+			double resizeFactor = (float)PIX_SIZE/(float)carColor.getHeight();
+			
+			// no rotation (0 degree)
+			at = new AffineTransform();
+			at.scale(resizeFactor, resizeFactor);
+			carColor0 = new BufferedImage(PIX_SIZE*2, PIX_SIZE, BufferedImage.TYPE_INT_ARGB);
+			carFrame0 = new BufferedImage(PIX_SIZE*2, PIX_SIZE, BufferedImage.TYPE_INT_ARGB);
+			scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+			scaleOp.filter(carColor, carColor0);
+			scaleOp.filter(carFrame, carFrame0);
+			
+			
+			
+			// facing down (270 degree)
+			at = new AffineTransform();
+			at.translate(0, PIX_SIZE);
+			at.rotate(0.5*Math.PI,PIX_SIZE,0);
+			at.scale(resizeFactor, resizeFactor);
+			carColor270 = new BufferedImage(PIX_SIZE, PIX_SIZE*2, BufferedImage.TYPE_INT_ARGB);
+			carFrame270 = new BufferedImage(PIX_SIZE, PIX_SIZE*2, BufferedImage.TYPE_INT_ARGB);
+			scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+			scaleOp.filter(carColor, carColor270);
+			scaleOp.filter(carFrame, carFrame270);
+			
+			// facing down (270 degree)
+			at = new AffineTransform();
+			at.translate(-PIX_SIZE, PIX_SIZE);
+			at.rotate(-0.5*Math.PI,PIX_SIZE,0);
+			at.scale(resizeFactor, resizeFactor);
+			carColor90 = new BufferedImage(PIX_SIZE, PIX_SIZE*2, BufferedImage.TYPE_INT_ARGB);
+			carFrame90 = new BufferedImage(PIX_SIZE, PIX_SIZE*2, BufferedImage.TYPE_INT_ARGB);
+			scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+			scaleOp.filter(carColor, carColor90);
+			scaleOp.filter(carFrame, carFrame90);
+			
+			
+		} catch (IOException e) {e.printStackTrace();
+		}
+		
 	}
 	
 }

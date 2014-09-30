@@ -129,7 +129,7 @@ public class Simulator {
 			
 			if (config.debugPeriodStop != 0 && tick == config.debugPeriodStop && config.debugBreakAfter)
 				return;
-			if ((tick%1000)==500)
+			if ((tick%50)==0)
 				System.out.println(tick);
 			config.output.consoleOutput("=============================================================",2,tick);
 			config.output.consoleOutput("Tick: "+tick,2,tick);
@@ -254,7 +254,7 @@ public class Simulator {
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
 			boolean spawnBlocked = false, freeAvailableKStack = false;
-			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || findSmallestStack() == -1) {
+			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || spawn.next2.car != null || spawn.next3.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || findSmallestStack() == -1) {
 				config.output.consoleOutput("spawnCar: Cannot spawn since spawn is blocked!",2,tick);
 				spawnBlocked = true;
 				
@@ -272,7 +272,11 @@ public class Simulator {
 				// index of the stack with the smallest amount of cars
 				// the boolean is for debug purposes -- if set to TRUE the
 				// simulator tries to stack all into kstack[0]
-				int index = findSmallestStack();
+				int index = -1;
+				if (tick == config.assortByRandom)
+					index = findRandomStack();
+				else
+					index = findSmallestStack();
 				config.output.consoleOutput("spawnCar: Car was put on stack "+index+" ("+this.kstack[index]+").",2,tick);
 				
 				EventItem tempEventItem = spawnList.eventItem;
@@ -768,7 +772,30 @@ l4:						while (tempStreet1.car != null) {
 		return Math.min(config.debugSmallestStack,kstack.length-1);
 	}
 	
-	
+	/**
+	 * This gives back a random Stack, which is not fully occupied.
+	 */
+	private int findRandomStack() {
+		if (config.debugSmallestStack <= -1) {
+			int indexStack = -1;
+			
+			indexStack = (int)(config.secRandom.nextDouble() * (float)(parkingRows*6));
+			
+			for (int i=0; i<parkingRows*6; i++) {
+				
+				
+				// looking for unlocked kstack with lowest watermark
+//				if (kstack[i].watermark < watermarkStack && !kstack[i].lockedForParking && !kstack[i].disabled) {
+//					watermarkStack = kstack[i].watermark;
+//					indexStack = i;
+//				}
+			}
+			return indexStack;
+		}
+		// when config.debugSmallestStack > -1 this always return
+		// kstack[config.debugSmallestStack]
+		return Math.min(config.debugSmallestStack,kstack.length-1);
+	}
 	
 	
 	
@@ -797,12 +824,14 @@ l4:						while (tempStreet1.car != null) {
 //		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
 //		debugOutput("Watermark: "+item.getCar().kstack.watermark,1);
 //		debugOutput("==========",1);
-		String result = stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop;
-		config.output.consoleOutput(result,1, tick);
-		config.output.writeToResultFile(result);
-		config.output.writeToBackOrderTime((stats[4]-stats[2]));
-		config.output.writeToTilesMoved(item.getCar().tilesMoved);
-		config.output.writeToStartStop(item.getCar().startstop);
+		if (tick != config.excludeFromResults) {
+			String result = stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop;
+			config.output.consoleOutput(result,1, tick);
+			config.output.writeToResultFile(result);
+			config.output.writeToBackOrderTime((stats[4]-stats[2]));
+			config.output.writeToTilesMoved(item.getCar().tilesMoved);
+			config.output.writeToStartStop(item.getCar().startstop);
+		}
 	}
 	
 }

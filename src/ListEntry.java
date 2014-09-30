@@ -2,6 +2,7 @@
 public class ListEntry {
 	public int index;
 	public ListEntry next;
+	
 	public ListEntry() {
 		index = -1;
 		next = null;
@@ -30,7 +31,7 @@ public class ListEntry {
 	}
 	
 	public void print(ListEntry list) {
-		System.out.print(list.index+"-");
+		System.out.println(list.index+"-");
 		if (list.next != null)
 			print(list.next);
 	}
