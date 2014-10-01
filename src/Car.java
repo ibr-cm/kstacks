@@ -50,8 +50,7 @@ public class Car {
 	
 	public boolean disabled;
 	
-	private Color color;
-	private float colorBrightness;
+	public int colorTheme;
 	
 	/**
 	 * This debug option marks all cars red, which are going to this KStack.
@@ -68,7 +67,7 @@ public class Car {
 	
 	public Car(int size, EventItem eventItem, Spawn spawn, Despawn despawn, Crossroad crossroad, Configuration config) {
 		this.config = config;
-		this.color = Color.getHSBColor(0.5f, 1.0f, 1.0f);
+		this.colorTheme = 0;
 		this.size = size;
 		this.kstack = null;
 		this.currentStreet = null;
@@ -94,9 +93,8 @@ public class Car {
 //		hue = hue*0.8f+0.1f;
 //		if (this.kstack.id == this.debugKStackID)
 //			hue = 0.0f;  // Makes the car red in case of debugging this stack.
-		float hue = config.secRandom.nextFloat();
-		this.colorBrightness = (float)(0.5*Math.random()+0.5);
-		this.color = Color.getHSBColor(hue, 1.0f, this.colorBrightness);
+		colorTheme = (int)(config.secRandom.nextFloat()*config.differentCars);
+
 		this.currentStreet = spawn;
 		spawn.car = this;
 		Street tempStreet1 = spawn;
@@ -372,11 +370,5 @@ public class Car {
 	 */
 	public boolean isInParkingLot() {
 		return this.isInParkingLot;
-	}
-	
-	public Color getColor() {
-//		if (drivingTarget != null && this.kstack.id != this.debugKStackID)
-//			return Color.getHSBColor(0.1f, 1.0f, this.colorBrightness);
-		return this.color;
 	}
 }

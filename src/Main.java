@@ -317,7 +317,7 @@ public class Main {
 			
 			size = 0;
 			
-			String fileName = "real_data.csv";
+			String fileName = "random_data.csv";
 			
 			CSV csv2 = CSV
 		    .separator(',')  // delimiter of fields
