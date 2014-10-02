@@ -140,7 +140,7 @@ public class Configuration {
 	 * everything gets bigger.
 	 */
 	public final int noOfParkingSpaces = 1440;
-	public final int kHeight = 4;
+	public final int kHeight = 1;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
@@ -218,7 +218,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 1;
+	public final int visualOutput = 0;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given
@@ -277,10 +277,10 @@ public class Configuration {
 	 * DEFAULT: public final int debugPeriodVisual = 0;
 	 * DEFAULT: public final int debugPersionVerbose = 0;
 	 */
-	public final int debugPeriodStart = 22000;
-	public final int debugPeriodStop = 22500;
+	public final int debugPeriodStart = -1;
+	public final int debugPeriodStop = -1;
 	public final boolean debugBreakAfter = true; 
-	public final int debugPeriodVisual = 1;
+	public final int debugPeriodVisual = 0;
 	public final int debugPeriodVerbose = 0;
 	
 	

@@ -117,7 +117,7 @@ public class Main {
 			while(!isEnoughCars(matching)) {
 				if((matching.length%1000)==0)
 					System.out.println(matching.length);
-				int arrivalTime = nextArrivalTime(); 
+				int arrivalTime = nextArrivalTime();
 //				System.out.println("arrivalTime: "+arrivalTime);
 				matching = addANewCar(matching, arrivalTime, nextParkDuration((int)(arrivalTime/4000)));
 			}
@@ -168,14 +168,15 @@ public class Main {
 			});
 			
 			// count incoming cars
-			int eventsSize = 0;
+//			int eventsSize = 0;
+			totalCarsUsed = 0;
 			for (int i=0; i<size; i++) {
-				eventsSize += csvData[i][1];
+				totalCarsUsed += csvData[i][1];
 			}
 
 			
 			// set correct number of cars used
-			totalCarsUsed = eventsSize;
+//			totalCarsUsed = eventsSize;
 			
 			
 //			int highestValue = 0, currentValue = 0;
@@ -189,8 +190,8 @@ public class Main {
 			
 			
 			// create new list of events, which will be formed to eventItems
-			int events[][] = new int[eventsSize][2];
-			for (int i = 0; i < eventsSize; i++) {
+			int events[][] = new int[totalCarsUsed][2];
+			for (int i = 0; i < totalCarsUsed; i++) {
 				events[i][0] = 0;
 				events[i][1] = 0;
 			}
@@ -204,17 +205,18 @@ public class Main {
 			for (int i = size-1; i >= 0; i--) {
 				// if there is an exit assign at this time
 				if (csvData[i][2] != 0) {
+					
 					// create new list
 					list = new ListEntry();
 					
-					
 					// look for an entry that is at least 15mins earlier
 					for (int j = i; j >= 0; j--) {
+						
 						// did it enter +15min erlier?
-						if ((csvData[j][0] <= (csvData[i][0]-1000)) && (csvData[j][1] > 0)) { //(csvData[j][0] >= (csvData[i][0]-12000)) && 
+						if ((csvData[j][0] <= (csvData[i][0]-1000)) && (csvData[j][0] >= (csvData[i][0]-19000)) && (csvData[j][1] > 0)) { //(csvData[j][0] >= (csvData[i][0]-12000)) && 
 							
 							// create as much list entries as needed
-//							for (int k = 0; k < csvData[j][1]; k++)
+//							for (int k = 0; k < csvData[j][1]; k++) // for entries according to entering cars for each tick
 								list.append(list, j);
 						}
 					}
@@ -225,15 +227,20 @@ public class Main {
 					
 					// are there any entries, that could work
 					if (list.size() != 0) {
+						
 						// find a random one
 						int enterIndex = list.getListEntry((int)(config.secRandom.nextFloat()*(float)(list.size()))).index;
+						
 						// reduce the exits by 1
 						csvData[i][2]--;
+						
 						// reduce the entries by 1
 						csvData[enterIndex][1]--;
+						
 						// make correct entry in the events list
 						events[eventsPointer][0] = csvData[enterIndex][0]+(int)(config.secRandom.nextFloat()*66.0);
 						events[eventsPointer][1] = csvData[i][0]+(int)(config.secRandom.nextFloat()*66.0);
+						
 						// print into the mapping file
 						config.output.writeToMappingFile(events[eventsPointer][0]+","+events[eventsPointer][1]);
 						eventsPointer++;
@@ -242,13 +249,13 @@ public class Main {
 				}
 			}
 			
-			int tenK=0;
+			int hundredK=0;
 			// map every car that did not exit the parking lot by now to exit 100000
 			for (int i = 0; i < size; i++) {
 				// if there is an entry
 				if (csvData[i][1] != 0) {
 //					System.out.println(i);
-					tenK++;
+					hundredK++;
 					// map it to exit = 100k
 					events[eventsPointer][0] = csvData[i][0]+(int)(config.secRandom.nextFloat()*66.0);
 					events[eventsPointer][1] = 100000;
@@ -261,7 +268,7 @@ public class Main {
 					i--;
 				}
 			}
-			System.out.println("cars with backOrderTime = 10k: "+tenK);
+			System.out.println("cars with backOrderTime = 100k: "+hundredK);
 //			System.exit(0);
 			
 			// check how many cars there will actually be
@@ -275,12 +282,12 @@ public class Main {
 			System.out.println("totalCarsUsed: "+totalCarsUsed);
 			
 			// print out if verboseLevel permits
-			if (config.verboseLevel > 0) {
-				System.out.println("# EntryTime,ExitTime");
-				for (int i = 0; i < totalCarsUsed; i++) {
-					System.out.println(events[0][i]+","+events[1][i]);
-				}
-			}
+//			if (config.verboseLevel > 0) {
+//				System.out.println("# EntryTime,ExitTime");
+//				for (int i = 0; i < totalCarsUsed; i++) {
+//					System.out.println(events[0][i]+","+events[1][i]);
+//				}
+//			}
 			
 			// creation of the correct number of items 
 			carList = new Car[totalCarsUsed];
@@ -301,7 +308,7 @@ public class Main {
 			
 			int highestValue2 = 0;
 			for (int i = 0; i < eventList.length; i++) {
-				System.out.println(eventList[i].getEntryTime()+","+eventList[i].getBackOrderTime());
+//				System.out.println(eventList[i].getEntryTime()+","+eventList[i].getBackOrderTime());
 				for (int j = eventList[i].getEntryTime(); j < eventList[i].getBackOrderTime(); j++)
 					testArray[j]++;
 			}
@@ -317,7 +324,7 @@ public class Main {
 			
 			size = 0;
 			
-			String fileName = "random_data.csv";
+			String fileName = "real_data.txt";
 			
 			CSV csv2 = CSV
 		    .separator(',')  // delimiter of fields
