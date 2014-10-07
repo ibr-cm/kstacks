@@ -103,7 +103,7 @@ public class Main {
 		case 1:
 			/** WORST CASE **/
 			for (int i = 0; i < totalCarsUsed; i++) {
-				eventList[i].setupEvent(carList[i], 0, waitTime+5000*(i/(totalCarsUsed/kHeight)));
+				eventList[i].setupEvent(carList[i], 0, waitTime+5000+5000*(i/(totalCarsUsed/kHeight)));
 			}
 			break;
 			
@@ -154,6 +154,7 @@ public class Main {
 			    	size = rowIndex+1;
 			    }
 			});
+
 
 			// create new array to transcribe csv to array
 			csvData = new int[size][3];
@@ -324,7 +325,7 @@ public class Main {
 			
 			size = 0;
 			
-			String fileName = "real_data.txt";
+			String fileName = "real_data.csv";
 			
 			CSV csv2 = CSV
 		    .separator(',')  // delimiter of fields
@@ -336,6 +337,7 @@ public class Main {
 			    	size = rowIndex+1;
 			    }
 			});
+			System.out.println(size+" cars");
 			
 			carList = new Car[size];
 			eventList = new EventItem[size];
@@ -352,9 +354,10 @@ public class Main {
 				eventList[i] = new EventItem();
 				carList[i] = new Car(carSize, eventList[i], spawn, despawn, crossroad, config);
 				eventList[i].setupEvent(carList[i], csvData[0][i], csvData[1][i]);
-//				System.out.println(csvData[0][i]+", "+csvData[1][i]);
 			}
+			
 			break;
+			
 			
 		default:
 			System.out.println("Please review the settings of the simulation in the config file!");
@@ -367,7 +370,7 @@ public class Main {
 		
 		
 		// create an instance of the simulator itself
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, kHeight, carSize, parkingRows, config);
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, config.kHeight, config.carSize, config.parkingRows, config);
 		
 		
 		

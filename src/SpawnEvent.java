@@ -25,8 +25,8 @@ public class SpawnEvent {
 	 * @param head First event on the list. Used to find the last element.
 	 * @param eventItem EventItem that should go to the end of the list.
 	 */
-	public void addNewEvent(SpawnEvent head, EventItem eventItem) {
-		SpawnEvent tempSpawnEvent = head;
+	public void addNewEvent(EventItem eventItem) {
+		SpawnEvent tempSpawnEvent = this;
 		while (tempSpawnEvent.next != null)
 			tempSpawnEvent = tempSpawnEvent.next;
 		tempSpawnEvent.next = new SpawnEvent(eventItem);

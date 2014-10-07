@@ -61,6 +61,8 @@ public class Simulator {
 //	private int verboseLevel;
 	private int crossroadRoundRobinState;
 	
+	private int cars100k;
+	
 	/**
 	 * Configuration file where most global variables
 	 */
@@ -115,7 +117,7 @@ public class Simulator {
 	 */
 	@SuppressWarnings("unused")
 	public void runSimulator() {
-		
+		this.cars100k = 0;
 		this.visualOutput = config.visualOutput;
 
 		// disable previous settings for outputs
@@ -129,7 +131,7 @@ public class Simulator {
 			
 			if (config.debugPeriodStop != 0 && tick == config.debugPeriodStop && config.debugBreakAfter)
 				return;
-			if ((tick%50)==0)
+			if ((tick%5000)==0)
 				System.out.println(tick);
 			config.output.consoleOutput("=============================================================",2,tick);
 			config.output.consoleOutput("Tick: "+tick,2,tick);
@@ -137,6 +139,7 @@ public class Simulator {
 			
 			this.usedByKStacks = null;
 			checkForStreetBlocking();
+			
 			
 			checkForRoundRobinAtCrossroad(3);
 			moveCars();
@@ -155,9 +158,11 @@ public class Simulator {
 			checkForUnparkingEvents();
 			
 			boolean carsInLot = false;
-			for (int i = 0; i<eventList.length; i++)
-				if (eventList[i].getCar().isInParkingLot())
+l7:			for (int i = 0; i<eventList.length; i++)
+				if (eventList[i].getCar().isInParkingLot()) {
 					carsInLot = true;
+					break l7;
+				}
 			
 			// generate a picture if all conditions are meet
 			if ((carsInLot || (config.debugPeriodStop > -1 && config.debugPeriodStart > -1)) && this.visualOutput != 0 && (tick%this.visualOutput)==0)
@@ -166,6 +171,9 @@ public class Simulator {
 			tick++;
 			config.output.consoleOutput("=============================================================",2,tick);
 		}
+//		System.out.println(cars100k);
+//		for (int i = 0; i < eventList.length; i++)
+//			this.printEventItem(eventList[i]);
 	}
 	
 	
@@ -214,27 +222,14 @@ public class Simulator {
 				
 				// adds up the content of all kstacks
 				int carsInStacks = 0;
-				for (int j=0; j<kstack.length; j++) {
+				for (int j = 0; j < kstack.length; j++) {
 					carsInStacks += kstack[j].watermark;
 				}
-				// If the parking lot is full the cars event is fulfilled but
-				// with a tick count of "right now" minus 1. This ensures that
-				// it is obvious which cars never entered the parking lot.
-				if (carsInStacks == kstack.length*kHeight) {
-					eventList[i].fulfill(tick-1);
-					config.output.consoleOutput("checkForSpawn: a car tried to spawn but parkingLot is full",2,tick);
-					config.output.consoleOutput("checkForSpawn: event: "+eventList[i],2,tick);
-					config.output.consoleOutput("checkForSpawn: entryTime: "+eventList[i].getEntryTime()+", backOrderTime: "+eventList[i].getBackOrderTime()+", exitTime"+eventList[i].getExitTime(),2,tick);
-				} else {
-					// If there is enough space the spawning of this car will
-					// be appended to the list of spawns.
-					if (spawnList == null) {
-						spawnList = new SpawnEvent(eventList[i]);
-					} else {
-						spawnList.addNewEvent(spawnList, eventList[i]);
-					}
-					config.output.consoleOutput("==========",2,tick);
-				}
+				if (spawnList == null)
+					spawnList = new SpawnEvent(eventList[i]);
+				else
+					spawnList.addNewEvent(eventList[i]);
+				config.output.consoleOutput("==========",2,tick);
 			}
 		}
 	}
@@ -315,6 +310,7 @@ public class Simulator {
 				// remove recently spawned car from spawnList
 				spawnList = spawnList.next;
 			} else {
+				// increase all waitings cars spawn delay by 1
 				SpawnEvent tempSpawnEvent = spawnList;
 				while (tempSpawnEvent != null) {
 					tempSpawnEvent.eventItem.increaseEntryDelay();
@@ -630,7 +626,7 @@ l4:						while (tempStreet1.car != null) {
 	 */
 	private void checkForStartsStops() {
 		for (int i = 0; i < eventList.length; i++)
-			eventList[i].getCar().checkForStartsStops();
+			eventList[i].getCar().checkForStartsStops(tick);
 	}
 	
 	
@@ -824,14 +820,16 @@ l4:						while (tempStreet1.car != null) {
 //		debugOutput("Starts, Stops: "+item.getCar().startstop, 1);
 //		debugOutput("Watermark: "+item.getCar().kstack.watermark,1);
 //		debugOutput("==========",1);
-		if (tick != config.excludeFromResults) {
+//		if (stats[2] != config.excludeFromResults) {
 			String result = stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop;
 			config.output.consoleOutput(result,1, tick);
 			config.output.writeToResultFile(result);
 			config.output.writeToBackOrderTime((stats[4]-stats[2]));
 			config.output.writeToTilesMoved(item.getCar().tilesMoved);
 			config.output.writeToStartStop(item.getCar().startstop);
-		}
+//		}
+//		else
+//			cars100k++;
 	}
 	
 }

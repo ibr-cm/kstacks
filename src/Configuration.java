@@ -140,7 +140,7 @@ public class Configuration {
 	 * everything gets bigger.
 	 */
 	public final int noOfParkingSpaces = 1440;
-	public final int kHeight = 1;
+	public final int kHeight = 12;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
@@ -279,7 +279,7 @@ public class Configuration {
 	 */
 	public final int debugPeriodStart = -1;
 	public final int debugPeriodStop = -1;
-	public final boolean debugBreakAfter = true; 
+	public final boolean debugBreakAfter = false; 
 	public final int debugPeriodVisual = 0;
 	public final int debugPeriodVerbose = 0;
 	

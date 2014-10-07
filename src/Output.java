@@ -29,13 +29,15 @@ public class Output {
 	private BufferedWriter demoWriter;
 	private Configuration config;
 	
+	private String middleIdentifier;
+	
 	/**
 	 * Creation of BufferedWriter which are needed for the output;
 	 * @param config Configuration file, which holds the information about the
 	 * location where all results are saved
 	 */
 	public Output(Configuration config) {
-		
+		middleIdentifier = "fifo";
 //		if (config.prohibitFileOutput)
 //			return;
 		
@@ -57,15 +59,15 @@ public class Output {
 		} catch (Exception e) {System.out.println("Could not create mappingWriter.");}
 		
 		try{
-			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create backOrderWriter.");}
 		
 		try{
-			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create tilesMovedWriter.");}
 		
 		try{
-			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
+			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 		} catch (Exception e) {System.out.println("Could not create startstopWriter.");}
 	}
 	
@@ -117,7 +119,7 @@ public class Output {
 //			return;
 		
 		try {
-			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+config.resultPostfix+".csv"),true));
+			backOrderWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/backOrder_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 			backOrderWriter.write(text+"\r\n");
 			backOrderWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
@@ -129,7 +131,7 @@ public class Output {
 //			return;
 		
 		try {
-			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+config.resultPostfix+".csv"),true));
+			tilesMovedWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/tilesMoved_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 			tilesMovedWriter.write(text+"\r\n");
 			tilesMovedWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
@@ -141,7 +143,7 @@ public void writeToStartStop(int text) {
 //			return;
 		
 		try {
-			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+config.resultPostfix+".csv"),true));
+			startstopWriter = new BufferedWriter(new FileWriter(new File("./"+config.resultPostfix+"/startstop_"+middleIdentifier+"_k"+config.kHeight+".csv"),true));
 			startstopWriter.write(text+"\r\n");
 			startstopWriter.close();
 		} catch (Exception e) {e.printStackTrace();}

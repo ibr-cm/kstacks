@@ -104,7 +104,7 @@ public class Car {
 				tempStreet1.car = this;
 			}
 		}
-		
+		this.wasMoving = true;
 		this.isInParkingLot = true;
 		this.kstack.lockedForUnparking = true; // locks kstack against unparking
 		
@@ -212,6 +212,7 @@ public class Car {
 						// blocked right after unparking from its stack.
 						this.wasMoving = false;
 						this.startstop++;
+						System.out.println("added 1 to stop at unparking");
 					}
 				}
 				
@@ -344,15 +345,19 @@ public class Car {
 	 * not counted seperately since it always starts with a Start and both
 	 * events occur interleaving.
 	 */
-	public void checkForStartsStops() {
+	public void checkForStartsStops(int tick) {
 		// if one of these three condition apply there is nothing to check for
-		if (this.drivingTarget == null || !this.isInParkingLot || this.currentStreet == null)
+		if (!this.isInParkingLot || this.currentStreet == null)
 			return;
 		if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
 			this.startstop++;
+			if (this.wasMoving)
+				System.out.println("added 1 to stop at "+tick);
+			else
+				System.out.println("added 1 to start at "+tick);
 			this.wasMoving = !this.wasMoving;
-			this.lastCurrentStreet = this.currentStreet;
 		}
+		this.lastCurrentStreet = this.currentStreet;
 	}
 	
 	/**
