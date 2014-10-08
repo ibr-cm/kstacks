@@ -37,7 +37,7 @@ public class Output {
 	 * location where all results are saved
 	 */
 	public Output(Configuration config) {
-		middleIdentifier = "fifo";
+		middleIdentifier = "lifo";
 //		if (config.prohibitFileOutput)
 //			return;
 		
