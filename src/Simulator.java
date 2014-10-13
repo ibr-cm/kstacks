@@ -54,9 +54,6 @@ public class Simulator {
 	private Street[] usedByKStacks;
 	
 	
-	private int kHeight;
-	private int carSize;
-	private int parkingRows;
 	private int visualOutput;
 //	private int verboseLevel;
 	private int crossroadRoundRobinState;
@@ -68,7 +65,7 @@ public class Simulator {
 	 */
 	private Configuration config;
 	
-	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, int kHeight, int carSize, int parkingRows, Configuration config) {
+	public Simulator(Spawn spawn, Despawn despawn, Crossroad crossroad, KStack[] kstack, EventItem[] eventList, Configuration config) {
 		
 		// This ensures that all are working with the same config file
 		this.config = config;
@@ -79,9 +76,6 @@ public class Simulator {
 		this.crossroad = crossroad;
 		this.kstack = kstack;
 		this.eventList = eventList;
-		this.kHeight = kHeight;
-		this.carSize = carSize;
-		this.parkingRows = parkingRows;
 		this.unparkingList = new UnparkEvent();
 		this.unparkingList.setHead();
 		this.visualOutput = 0; // for documentation please see config file
@@ -191,6 +185,7 @@ l7:			for (int i = 0; i<eventList.length; i++)
 	 * left the parking lot.
 	 * When it is done the stats of the car get printed out.
 	 */
+	// TODO
 	private void despawnCar() {
 		if (despawn.car != null) {
 			config.output.consoleOutput("==========",2,tick);
@@ -198,7 +193,31 @@ l7:			for (int i = 0; i<eventList.length; i++)
 			Car tempCar = despawn.car;
 			tempCar.eventItem.fulfill(tick);
 			Street tempStreet = despawn;
-			while(tempStreet != crossroad) {
+			while(tempStreet.car == tempCar) {
+				tempStreet.car = null;
+				tempStreet = tempStreet.prev1;
+			}
+			printEventItem(tempCar.eventItem);
+		}
+		if (config.tripleDespawn && config.despawnLane2.car != null) {
+			config.output.consoleOutput("==========",2,tick);
+			config.output.consoleOutput("Just despawned car "+config.despawnLane2.car,2,tick);
+			Car tempCar = config.despawnLane2.car;
+			tempCar.eventItem.fulfill(tick);
+			Street tempStreet = config.despawnLane2;
+			while(tempStreet.car == tempCar) {
+				tempStreet.car = null;
+				tempStreet = tempStreet.prev1;
+			}
+			printEventItem(tempCar.eventItem);
+		}
+		if (config.tripleDespawn && config.despawnLane3.car != null) {
+			config.output.consoleOutput("==========",2,tick);
+			config.output.consoleOutput("Just despawned car "+config.despawnLane3.car,2,tick);
+			Car tempCar = config.despawnLane3.car;
+			tempCar.eventItem.fulfill(tick);
+			Street tempStreet = config.despawnLane3;
+			while(tempStreet.car == tempCar) {
 				tempStreet.car = null;
 				tempStreet = tempStreet.prev1;
 			}
@@ -249,7 +268,7 @@ l7:			for (int i = 0; i<eventList.length; i++)
 			// spawn blocked by kstack (unparking)
 			// spawn blocked by car (previous spawn)
 			boolean spawnBlocked = false, freeAvailableKStack = false;
-			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || spawn.next2.car != null || spawn.next3.car != null || (kHeight*carSize>2?spawn.prev1.car != null:false) || findSmallestStack() == -1) {
+			if (spawn.blockingKStack != null || spawn.car != null || spawn.carAtLastTick != null || spawn.next1.car != null || spawn.next2.car != null || spawn.next3.car != null || (config.kHeight*config.carSize>2?spawn.prev1.car != null:false) || findSmallestStack() == -1) {
 				config.output.consoleOutput("spawnCar: Cannot spawn since spawn is blocked!",2,tick);
 				spawnBlocked = true;
 				
@@ -307,6 +326,21 @@ l7:			for (int i = 0; i<eventList.length; i++)
 				targets[0] = new DrivingTarget(tempStreet1, 'D', tempEventItem.getCar().kstack, tempEventItem.getCar().kstack, false, unparkingList, null, false);
 				tempEventItem.getCar().setDrivingTargets(targets);
 				
+				// Assess the distance the car drove to let others unpark.
+				if (tempEventItem.getCar().kstack.lane == spawn.next2 || tempEventItem.getCar().kstack.lane == spawn.next3)
+					tempEventItem.setMinDistance((2*config.kHeight*config.carSize)+1+config.parkingRows+1+(config.tripleDespawn?0:(2*config.kHeight*config.carSize))+config.carSize);
+				else
+					tempEventItem.setMinDistance(config.parkingRows+1+config.carSize);
+				
+				// Assess the time the car would need to the next despawn
+				int minUnparkingTime = 0;
+				tempStreet1 = tempEventItem.getCar().kstack.prev1;
+				while (tempStreet1 != despawn && (!config.tripleDespawn || (tempStreet1 != config.despawnLane2 && tempStreet1 != config.despawnLane3))) {
+					tempStreet1 = tempStreet1.next1;
+					minUnparkingTime++;
+				}
+				tempEventItem.setMinUnparkingTime(minUnparkingTime);
+				
 				// remove recently spawned car from spawnList
 				spawnList = spawnList.next;
 			} else {
@@ -336,7 +370,7 @@ l7:			for (int i = 0; i<eventList.length; i++)
 			tempStreet1 = tempStreet1.next1;
 		}
 		if (car.parkingSpot != 0) {
-			for (int i = 0; i < (car.parkingSpot*carSize); i++) {
+			for (int i = 0; i < (car.parkingSpot*config.carSize); i++) {
 				tempStreet1 = tempStreet1.prev1;
 			}
 		}
@@ -415,8 +449,8 @@ l7:			for (int i = 0; i<eventList.length; i++)
 						
 						// find street right before entering the street
 						Street tempStreet2 = eventList[i].getCar().kstack;
-						if (carSize > 1) {
-							for (int j = 0; j < carSize-1; j++) {
+						if (config.carSize > 1) {
+							for (int j = 0; j < config.carSize-1; j++) {
 								tempStreet2 = tempStreet2.next1;
 							}
 						}
@@ -497,7 +531,7 @@ l4:						while (tempStreet1.car != null) {
 	 */
 	private Street unparkingSpot(int spot, Street kstack) {
 		Street tempStreet1 = kstack.prev1;
-		for (int i = 0; i < spot*carSize; i++) {
+		for (int i = 0; i < spot*config.carSize; i++) {
 			tempStreet1 = tempStreet1.prev1;
 		}
 		return tempStreet1;
@@ -527,8 +561,8 @@ l4:						while (tempStreet1.car != null) {
 				
 				// Checking if the street is blocked.
 				boolean spaceIsFree = true;
-				config.output.consoleOutput("checkForStreetBlocking: checking for space "+((tempUnparkEvent1.carsInTheWay+1)*this.carSize),2,tick);
-				for (int i = 0; i < (tempUnparkEvent1.carsInTheWay+1)*this.carSize; i++) {
+				config.output.consoleOutput("checkForStreetBlocking: checking for space "+((tempUnparkEvent1.carsInTheWay+1)*config.carSize),2,tick);
+				for (int i = 0; i < (tempUnparkEvent1.carsInTheWay+1)*config.carSize; i++) {
 					if (!config.chaoticUnparking) {
 						if (isStreetAlreadyUsedByKStack(tempStreet1)) {
 							spaceIsFree = false;
@@ -547,7 +581,7 @@ l4:						while (tempStreet1.car != null) {
 				
 				// If not the street can be blocked.
 				if (spaceIsFree) {
-					blockStreets(tempUnparkEvent1.getKStack(), ((tempUnparkEvent1.carsInTheWay+1)*this.carSize));
+					blockStreets(tempUnparkEvent1.getKStack(), ((tempUnparkEvent1.carsInTheWay+1)*config.carSize));
 					tempUnparkEvent1.doneBlocking = true;
 					tempUnparkEvent1.firstInQueue.disabled = false;
 				} else {
@@ -752,9 +786,9 @@ l4:						while (tempStreet1.car != null) {
 	 */
 	private int findSmallestStack() {
 		if (config.debugSmallestStack <= -1) {
-			int indexStack = -1, watermarkStack = kHeight;
+			int indexStack = -1, watermarkStack = config.kHeight;
 			
-			for (int i=0; i<parkingRows*6; i++) {
+			for (int i=0; i<config.parkingRows*6; i++) {
 				// looking for unlocked kstack with lowest watermark
 				if (kstack[i].watermark < watermarkStack && !kstack[i].lockedForParking && !kstack[i].disabled) {
 					watermarkStack = kstack[i].watermark;
@@ -775,9 +809,9 @@ l4:						while (tempStreet1.car != null) {
 		if (config.debugSmallestStack <= -1) {
 			int indexStack = -1;
 			
-			indexStack = (int)(config.secRandom.nextDouble() * (float)(parkingRows*6));
+			indexStack = (int)(config.secRandom.nextDouble() * (float)(config.parkingRows*6));
 			
-			for (int i=0; i<parkingRows*6; i++) {
+			for (int i=0; i<config.parkingRows*6; i++) {
 				
 				
 				// looking for unlocked kstack with lowest watermark
@@ -824,8 +858,8 @@ l4:						while (tempStreet1.car != null) {
 			String result = stats[0]+","+stats[1]+","+stats[2]+","+stats[3]+","+stats[4]+","+(stats[4]-stats[2])+","+item.getCar().tilesMoved+","+item.getCar().startstop;
 			config.output.consoleOutput(result,1, tick);
 			config.output.writeToResultFile(result);
-			config.output.writeToBackOrderTime((stats[4]-stats[2]));
-			config.output.writeToTilesMoved(item.getCar().tilesMoved);
+			config.output.writeToBackOrderTime((stats[4]-stats[2])+" "+item.getMinUnparkingTime());
+			config.output.writeToTilesMoved(item.getCar().tilesMoved+" "+item.getMinDistance());
 			config.output.writeToStartStop(item.getCar().startstop);
 //		}
 //		else

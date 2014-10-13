@@ -56,8 +56,8 @@ public class Configuration {
 	/**
 	 * This variable sets the operation mode of the simulator. It can be set to
 	 * the following different modes: 
-	 * 0: best case (unpark always just 1 at a time)
-	 * 1: worst case (unpark all cars with the same rank at once, starting with
+	 * 0: lifo case (unpark always just 1 at a time)
+	 * 1: fifo case (unpark all cars with the same rank at once, starting with
 	 *    the highest)
 	 * 2: random case using poisson distribution with certain probabilities for
 	 *    the parking duration - PLEASE SEE ADDITIONAL OPTIONS BELOW
@@ -125,6 +125,8 @@ public class Configuration {
 	 *    the cars get ordered back and the time they actually exit the parking
 	 *    lot). So stack 17 might be closer to despawn than stack 42 but it is
 	 *    certainly -NOT- further away.
+	 * 3: mirrored triple layout - This layout should be used when using three
+	 *    exits. This way a minimal distance to the right exit is maintained.  
 	 *    
 	 *    DEFAULT: public final int parkingLotLayout = 2;
 	 */
@@ -235,8 +237,17 @@ public class Configuration {
 	
 	
 	
-	
-	
+	/**
+	 * In case there should be three different despawns. If three despawns will
+	 * be used there need to be more despawns.
+	 * 
+	 * Also if it is set to true the mirrored triple layout is recommended.
+	 * 
+	 * DEFAULT: public final boolean tripleDespawn = false;
+	 */
+	public boolean tripleDespawn = false;
+	public Street despawnLane2;
+	public Street despawnLane3;
 	
 	
 	/** DEBUG CONFIGURATION FOR SIMULATOR **/
@@ -279,7 +290,7 @@ public class Configuration {
 	 */
 	public final int debugPeriodStart = -1;
 	public final int debugPeriodStop = -1;
-	public final boolean debugBreakAfter = false; 
+	public final boolean debugBreakAfter = true; 
 	public final int debugPeriodVisual = 0;
 	public final int debugPeriodVerbose = 0;
 	

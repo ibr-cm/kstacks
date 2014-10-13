@@ -113,7 +113,7 @@ public class Output {
 	}
 	
 	
-	public void writeToBackOrderTime(int text) {
+	public void writeToBackOrderTime(String text) {
 		
 //		if (config.prohibitFileOutput)
 //			return;
@@ -125,7 +125,7 @@ public class Output {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public void writeToTilesMoved(int text) {
+	public void writeToTilesMoved(String text) {
 		
 //		if (config.prohibitFileOutput)
 //			return;
@@ -207,6 +207,7 @@ public void writeToStartStop(int text) {
 			configWriter.write("kHeight = "+config.kHeight+"\r\n");
 			configWriter.write("parkingRows = "+config.parkingRows+"\r\n");
 			configWriter.write("car length = "+config.carSize+"\r\n");
+			configWriter.write("triple despawn = "+config.tripleDespawn+"\r\n");
 			configWriter.close();
 		} catch (Exception e) {e.printStackTrace();}
 	}

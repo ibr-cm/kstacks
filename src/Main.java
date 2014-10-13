@@ -370,9 +370,23 @@ public class Main {
 		
 		
 		// create an instance of the simulator itself
-		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, config.kHeight, config.carSize, config.parkingRows, config);
+		Simulator simulator = new Simulator(spawn, despawn, crossroad, kstacks, eventList, config);
 		
-		
+		// add two more despawns if needed
+		if (config.tripleDespawn) {
+			Street tempStreet1 = crossroad.prev2;
+			Street tempStreet2 = crossroad.prev3;
+			while(tempStreet1.kstack1 == null) {
+				tempStreet1 = tempStreet1.prev1;
+				tempStreet2 = tempStreet2.prev1;
+			}
+			for(int i = 0; i < (config.carSize+1); i++) {
+				tempStreet1 = tempStreet1.next1;
+				tempStreet2 = tempStreet2.next1;
+			}
+			config.despawnLane2 = tempStreet1;
+			config.despawnLane3 = tempStreet2;
+		}
 		
 		// run the simulator
 		timeMeasure = System.currentTimeMillis();
@@ -657,8 +671,8 @@ public class Main {
 		case 0:
 			/**
 			 * append kstacks to correct streets
-			 * first 1/3 kstack is connected to top lane
-			 * second 1/3 is connected to middle lane
+			 * first 1/3 kstack is connected to middle lane
+			 * second 1/3 is connected to top lane
 			 * last 1/3 is connected to bottom lane
 			 * 
 			 * the first stack is also closest to the entry
@@ -700,8 +714,8 @@ public class Main {
 		case 1:
 			/**
 			 * append kstacks to correct streets
-			 * first 1/3 kstack is connected to top lane
-			 * second 1/3 is connected to middle lane
+			 * first 1/3 kstack is connected to middle lane
+			 * second 1/3 is connected to top lane
 			 * last 1/3 is connected to bottom lane
 			 * 
 			 * the first stack is also closest to the exit
@@ -789,6 +803,45 @@ public class Main {
 			break;
 			
 			
+			
+		case 3: // mirrored triple layout
+			tempStreet1 = crossroad.prev1;
+			tempStreet2 = crossroad.prev2;
+			tempStreet3 = crossroad.prev3;
+			for (int i = 0; i < (1+(2*config.carSize*config.kHeight)); i++) {
+				tempStreet2 = tempStreet2.prev1;
+				tempStreet3 = tempStreet3.prev1;
+			}
+			for (int i = 0; i < config.parkingRows; i++) {
+				tempStreet1.kstack1 = kstacks[6*i  ];
+				kstacks[6*i  ].prev1 = tempStreet1;
+				kstacks[6*i  ].lane = spawn.next1;
+				
+				tempStreet1.kstack2 = kstacks[6*i+1];
+				kstacks[6*i+1].prev1 = tempStreet1;
+				kstacks[6*i+1].lane = spawn.next1;
+				
+				tempStreet2.kstack1 = kstacks[6*i+2];
+				kstacks[6*i+2].prev1 = tempStreet2;
+				kstacks[6*i+2].lane = spawn.next2;
+				
+				tempStreet2.kstack2 = kstacks[6*i+3];
+				kstacks[6*i+3].prev1 = tempStreet2;
+				kstacks[6*i+3].lane = spawn.next2;
+				
+				tempStreet3.kstack1 = kstacks[6*i+4];
+				kstacks[6*i+4].prev1 = tempStreet3;
+				kstacks[6*i+4].lane = spawn.next3;
+				
+				tempStreet3.kstack2 = kstacks[6*i+5];
+				kstacks[6*i+5].prev1 = tempStreet3;
+				kstacks[6*i+5].lane = spawn.next3;
+				
+				tempStreet1 = tempStreet1.prev1;
+				tempStreet2 = tempStreet2.prev1;
+				tempStreet3 = tempStreet3.prev1;
+			}
+			break;
 			
 			
 			

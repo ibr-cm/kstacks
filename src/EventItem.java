@@ -15,6 +15,15 @@ public class EventItem {
 	private int exitTime; // in ticks -- time when car public KStack kstack;actually exits parking lot
 	private boolean fulfilled;
 	
+	/*
+	 * This describes the distance that a car will drive to get to its stack 
+	 * and from there to the despawn. This way the distance the car drove to
+	 * let others unpark is determined.
+	 */
+	private int minDistance;
+	private int minUnparkingTime;
+	
+	
 	/**
 	 * If this is set true the car will not be put into the smallest stack, but
 	 * rather put into a random stack, which still has enough room left.
@@ -41,8 +50,6 @@ public class EventItem {
 		this.randomStack = false;
 	}
 	
-	
-	
 	public void fulfill(int tick) {
 		this.fulfilled = true;
 		this.exitTime = tick;
@@ -57,6 +64,13 @@ public class EventItem {
 		this.entryDelay++;
 	}
 	
+	public void setMinDistance(int dist) {
+		this.minDistance = dist;
+	}
+	
+	public void setMinUnparkingTime(int time) {
+		this.minUnparkingTime = time;
+	}
 	
 	/*
 	 * Methods to get values
@@ -68,6 +82,8 @@ public class EventItem {
 	public int getEntryTime() {return this.entryTime;}
 	public int getEntryDelay() {return this.entryDelay;}
 	public int getExitTime() {return this.exitTime;}
+	public int getMinDistance() {return this.minDistance;}
+	public int getMinUnparkingTime() {return this.minUnparkingTime;}
 	public int[] getEventStats() {
 		int[] stats = {entryTime, entryDelay, backOrderTime, backOrderDelay, exitTime};
 		return stats;

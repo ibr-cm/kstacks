@@ -212,7 +212,7 @@ public class Car {
 						// blocked right after unparking from its stack.
 						this.wasMoving = false;
 						this.startstop++;
-						System.out.println("added 1 to stop at unparking");
+//						System.out.println("added 1 to stop at unparking");
 					}
 				}
 				
@@ -351,10 +351,10 @@ public class Car {
 			return;
 		if ((this.currentStreet == this.lastCurrentStreet && this.wasMoving) || (this.currentStreet != this.lastCurrentStreet && !this.wasMoving)) {
 			this.startstop++;
-			if (this.wasMoving)
-				System.out.println("added 1 to stop at "+tick);
-			else
-				System.out.println("added 1 to start at "+tick);
+//			if (this.wasMoving)
+//				System.out.println("added 1 to stop at "+tick);
+//			else
+//				System.out.println("added 1 to start at "+tick);
 			this.wasMoving = !this.wasMoving;
 		}
 		this.lastCurrentStreet = this.currentStreet;
