@@ -142,7 +142,7 @@ public class Configuration {
 	 * everything gets bigger.
 	 */
 	public final int noOfParkingSpaces = 1440;
-	public final int kHeight = 5;
+	public final int kHeight = 3;
 	public final int carSize = 2;
 	public final int parkingRows = (noOfParkingSpaces/kHeight)/6; // -DO NOT TOUCH-
 	
@@ -220,7 +220,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final int visualOutput = 0;
 	 */
-	public final int visualOutput = 0;
+	public final int visualOutput = 1;
 	
 	/**
 	 * If this boolean is set to true every KStack can unpark at any time given

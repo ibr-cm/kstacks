@@ -42,7 +42,7 @@ public class Output {
 		else if (config.simulatorCase == 1)
 			middleIdentifier = "fifo";
 		else
-			middleIdentifier = "random";
+			middleIdentifier = "real";
 //		if (config.prohibitFileOutput)
 //			return;
 		
