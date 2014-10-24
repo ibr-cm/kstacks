@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -396,8 +397,10 @@ public void writeToStartStop(int text) {
 			if (tempStreet1 == spawn && tempStreet1.car != null) {
 				if (tempStreet1.car == spawn.next1.car) {
 					g.drawImage(config.allCars[tempStreet1.car.colorTheme][0], null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
-				} else if (tempStreet1.car == spawn.next2.car) {
-					g.drawImage(config.allCars[tempStreet1.car.colorTheme][1], null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
+				// The cars going into the top lane do not need to be painted since they will be when the left
+				// vertical street is checked.
+//				} else if (tempStreet1.car == spawn.next2.car) {
+//					g.drawImage(config.allCars[tempStreet1.car.colorTheme][1], null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
 				} else if (tempStreet1.car == spawn.next3.car) {
 					g.drawImage(config.allCars[tempStreet1.car.colorTheme][2], null, i*PIX_SIZE, (Y/2)*PIX_SIZE);
 				}
@@ -608,6 +611,19 @@ l2:			while (tempStreet1 != crossroad) {
 				}
 			}
 		}
+		
+		g.setColor(Color.red);
+		g.setFont(new Font( "SansSerif", Font.BOLD, 28));
+		String time = "";
+		if ((((float)(tick))*0.9)/3600 < 3)
+			time = "0";
+		time += Integer.toString(7+(int)((((float)(tick))*0.9)/3600));
+		time += ":";
+		if (((((float)(tick))*0.9)/60)%60 < 10)
+			time += "0";
+		
+		time += Integer.toString((int)(((((float)(tick))*0.9)/60)%60));
+		g.drawString(time, 10, 45);
 		
 
 		g.dispose();
