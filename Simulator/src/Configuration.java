@@ -130,7 +130,7 @@ public class Configuration {
 	 *    
 	 *    DEFAULT: public final int parkingLotLayout = 2;
 	 */
-	public final int parkingLotLayout = 3;
+	public final int parkingLotLayout = 2;
 	
 	
 	/**
@@ -245,7 +245,7 @@ public class Configuration {
 	 * 
 	 * DEFAULT: public final boolean tripleDespawn = false;
 	 */
-	public boolean tripleDespawn = true;
+	public boolean tripleDespawn = false;
 	public Street despawnLane2;
 	public Street despawnLane3;
 	
@@ -315,6 +315,7 @@ public class Configuration {
 	public int differentCars = 0;
 	public BufferedImage[] cars0, cars90, cars270;
 	public BufferedImage[][] allCars;
+	public BufferedImage logo;
 
 	
 	public Configuration() {
@@ -366,7 +367,13 @@ public class Configuration {
 			
 			
 		} catch (Exception e) {e.printStackTrace();}
+		
+		try {
+			logo = ImageIO.read(new File("./images/logo.png"));
+		} catch (Exception e) {e.printStackTrace();}
 	}
+	
+	
 	
 	private boolean check(String path) {
 		try {
