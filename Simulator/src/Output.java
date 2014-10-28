@@ -625,8 +625,6 @@ l2:			while (tempStreet1 != crossroad) {
 		time += Integer.toString((int)(((((float)(tick))*0.9)/60)%60));
 		g.drawString(time, 10, 45);
 		
-
-		g.dispose();
 		
 		String filename =  "tick_";
 		if (tick < 100000)
@@ -640,8 +638,9 @@ l2:			while (tempStreet1 != crossroad) {
 		if (tick < 10)
 			filename += "0";
 		filename += tick+".png";
-		
-        saveToFile( bi, filename );
+
+		g.dispose();
+		saveToFile( bi, filename );
 	}
 	
 	
