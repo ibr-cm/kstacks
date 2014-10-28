@@ -3,3 +3,4 @@ bin/
 *.log
 *.synctex.gz
 *.aux
+csv-input*/
