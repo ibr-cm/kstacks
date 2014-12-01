@@ -159,7 +159,7 @@ l7:			for (int i = 0; i<eventList.length; i++)
 				}
 			
 			// generate a picture if all conditions are meet
-//			if ((carsInLot || (config.debugPeriodStop > -1 && config.debugPeriodStart > -1)) && this.visualOutput != 0 && (tick%this.visualOutput)==0)
+			if ((carsInLot || (config.debugPeriodStop > -1 && config.debugPeriodStart > -1)) && this.visualOutput != 0 && (tick%this.visualOutput)==0)
 				try {config.output.generateImage(kstack, spawn, crossroad, tick);} catch (Exception e) {}
 			
 			tick++;

@@ -626,21 +626,45 @@ l2:			while (tempStreet1 != crossroad) {
 		g.drawString(time, 10, 45);
 		
 		
-		String filename =  "tick_";
-		if (tick < 100000)
-			filename += "0";
-		if (tick < 10000)
-			filename += "0";
-		if (tick < 1000)
-			filename += "0";
-		if (tick < 100)
-			filename += "0";
-		if (tick < 10)
-			filename += "0";
-		filename += tick+".png";
-
-		g.dispose();
-		saveToFile( bi, filename );
+		g.drawImage(config.logo, null, 0, 550);
+		
+		if (tick == 0) {
+			g.dispose();
+			for (int i = 0; i < 80; i++) {
+				
+				String filename =  "tick_";
+				if (tick < 100000)
+					filename += "0";
+				if (tick < 10000)
+					filename += "0";
+				if (tick < 1000)
+					filename += "0";
+				if (tick < 100)
+					filename += "0";
+				if (tick < 10)
+					filename += "0";
+				filename += tick+"_"+i+".png";
+				
+				saveToFile ( bi, filename );
+			}
+		} else {
+			g.dispose();
+			
+			String filename =  "tick_";
+			if (tick < 100000)
+				filename += "0";
+			if (tick < 10000)
+				filename += "0";
+			if (tick < 1000)
+				filename += "0";
+			if (tick < 100)
+				filename += "0";
+			if (tick < 10)
+				filename += "0";
+			filename += tick+".png";
+			
+			saveToFile( bi, filename );
+		}
 	}
 	
 	
