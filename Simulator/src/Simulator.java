@@ -326,9 +326,9 @@ l7:			for (int i = 0; i<eventList.length; i++)
 				targets[0] = new DrivingTarget(tempStreet1, 'D', tempEventItem.getCar().kstack, tempEventItem.getCar().kstack, false, unparkingList, null, false);
 				tempEventItem.getCar().setDrivingTargets(targets);
 				
-				// Assess the distance the car drove to let others unpark.
+				// Assess the minimal distance the car has to drive.
 				if (tempEventItem.getCar().kstack.lane == spawn.next2 || tempEventItem.getCar().kstack.lane == spawn.next3)
-					tempEventItem.setMinDistance((2*config.kHeight*config.carSize)+1+config.parkingRows+1+(config.tripleDespawn?0:(2*config.kHeight*config.carSize))+config.carSize);
+					tempEventItem.setMinDistance((2*config.kHeight*config.carSize)+1+config.parkingRows+1+(config.tripleDespawn?0:(2*config.kHeight*config.carSize+1))+config.carSize);
 				else
 					tempEventItem.setMinDistance(config.parkingRows+1+config.carSize);
 				
