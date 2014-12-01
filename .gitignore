@@ -4,3 +4,5 @@ bin/
 *.synctex.gz
 *.aux
 csv-input*/
+*.plot~
+*.csv~
